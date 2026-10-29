@@ -1,9 +1,11 @@
 /**
  * PROlimpio – Resumen mensual del reloj por mail.
- * Va en la misma planilla que los cierres: Extensiones → Apps Script → "+" → Secuencia de comandos → nombre "Reloj".
- * Usa LOCAL y DESTINOS del programa de los cierres (mismos mails).
+ * Va en la planilla del reloj: Extensiones → Apps Script → borrar lo que hay, pegar esto y Guardar.
  * Ejecutar UNA vez la función "instalarReloj". Para probar, ejecutar "probarReloj" (manda el mes en curso).
  */
+
+const RELOJ_LOCAL = "Colonia";                                                   // nombre del local
+const RELOJ_DESTINOS = "coloniaadm@prolimpio.com.uy,colonia@prolimpio.com.uy";  // mails que reciben el resumen, separados por coma
 
 const RELOJ_MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Setiembre","Octubre","Noviembre","Diciembre"];
 const RELOJ_DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
@@ -13,8 +15,8 @@ const RELOJ_TZ = "America/Montevideo";
 function instalarReloj() {
   ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === "enviarResumenReloj") ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger("enviarResumenReloj").timeBased().onMonthDay(1).atHour(10).inTimezone(RELOJ_TZ).create();
-  MailApp.sendEmail(DESTINOS, "✅ Resumen mensual del reloj activado",
-    "Desde ahora, el día 1 de cada mes vas a recibir el resumen del reloj de PROlimpio " + LOCAL + ": días trabajados, faltas, llegadas tarde y horas extra de cada funcionario.");
+  MailApp.sendEmail(RELOJ_DESTINOS, "✅ Resumen mensual del reloj activado",
+    "Desde ahora, el día 1 de cada mes vas a recibir el resumen del reloj de PROlimpio " + RELOJ_LOCAL + ": días trabajados, faltas, llegadas tarde y horas extra de cada funcionario.");
 }
 
 /** Prueba: manda el resumen del mes en curso hasta hoy. */
@@ -80,7 +82,7 @@ function enviarMesReloj(y, m, prueba) {
   const nombre = "Reloj " + RELOJ_MESES[m] + " " + y;
   let sh = ss.getSheetByName(nombre);
   if (!sh) sh = ss.insertSheet(nombre); else sh.clear();
-  const v = [["PROlimpio " + LOCAL + " – Planilla de " + RELOJ_MESES[m] + " " + y, "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
+  const v = [["PROlimpio " + RELOJ_LOCAL + " – Planilla de " + RELOJ_MESES[m] + " " + y, "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
     ["Funcionario", "Días trabajados", "Faltas", "Llegadas tarde", "Horas trabajadas", "Horas extra", "", ""]];
   filas.forEach(r => v.push([r.nombre, r.trab, r.faltas, r.tardes, relojHm(r.min), relojHm(r.extra), "", ""]));
   v.push(["", "", "", "", "", "", "", ""], ["Detalle por día", "", "", "", "", "", "", ""], ["Funcionario", "Fecha", "Día", "Marcas", "Trabajó", "Extra", "Tarde", "Estado"]);
@@ -95,7 +97,7 @@ function enviarMesReloj(y, m, prueba) {
   const td = (x, r) => `<td style="padding:6px 8px;border-bottom:1px solid #F7E2CC;${r ? "text-align:right" : ""}">${x}</td>`;
   const tabla = filas.map(r => `<tr>${td(r.nombre + (r.inc ? ` <span style="color:#7F1D1D;font-size:12px">(${r.inc} día${r.inc > 1 ? "s" : ""} sin cerrar)</span>` : ""))}${td(r.trab, 1)}${td(r.faltas ? `<b style="color:#7F1D1D">${r.faltas}</b>` : 0, 1)}${td(r.tardes, 1)}${td(relojHm(r.min), 1)}${td("<b>" + relojHm(r.extra) + "</b>", 1)}</tr>`).join("");
   const html = `<div style="font-family:Arial,sans-serif;max-width:600px;color:#1F0D05">
-    <div style="background:#E84400;color:#fff;padding:14px 16px;border-radius:10px 10px 0 0;font-size:18px;font-weight:bold">PROlimpio ${LOCAL} · Reloj de ${RELOJ_MESES[m]} ${y}</div>
+    <div style="background:#E84400;color:#fff;padding:14px 16px;border-radius:10px 10px 0 0;font-size:18px;font-weight:bold">PROlimpio ${RELOJ_LOCAL} · Reloj de ${RELOJ_MESES[m]} ${y}</div>
     <div style="border:1px solid #F2C9A0;border-top:0;padding:12px 10px;border-radius:0 0 10px 10px">
       ${prueba ? '<div style="background:#FEF3C7;color:#92400E;padding:8px 10px;border-radius:8px;margin-bottom:8px">Prueba: mes en curso, hasta hoy.</div>' : ""}
       <table style="width:100%;border-collapse:collapse;font-size:14px">
@@ -104,5 +106,5 @@ function enviarMesReloj(y, m, prueba) {
       </table>
       <p style="margin:14px 8px 4px"><a href="${url}" style="background:#E84400;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:bold">Ver la planilla con el detalle día por día</a></p>
     </div></div>`;
-  MailApp.sendEmail({ to: DESTINOS, subject: (prueba ? "🧪 Prueba · " : "🕘 ") + "Reloj " + RELOJ_MESES[m] + " " + y + " · PROlimpio " + LOCAL, htmlBody: html });
+  MailApp.sendEmail({ to: RELOJ_DESTINOS, subject: (prueba ? "🧪 Prueba · " : "🕘 ") + "Reloj " + RELOJ_MESES[m] + " " + y + " · PROlimpio " + RELOJ_LOCAL, htmlBody: html });
 }

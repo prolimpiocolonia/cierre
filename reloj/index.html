@@ -173,8 +173,9 @@ details summary{cursor:pointer;color:var(--ac2);font-weight:600;margin:6px 0}
     </div>
     <div class="card">
       <div class="ct">Resumen por mail el 1.º de cada mes</div>
-      <p class="mu">Un programa dentro de la planilla manda el resumen del mes a los mismos mails que reciben los cierres. Se instala una sola vez desde una computadora, igual que el de los cierres.</p>
-      <button class="bs" id="aScript" style="width:100%">📋 Copiar el programa del resumen</button>
+      <p class="mu">Un programa dentro de la planilla del reloj manda el resumen del mes por mail. Se instala una sola vez desde una computadora, igual que el de los cierres.</p>
+      <label>Mails que reciben el resumen (separados por coma)</label><input id="aMails">
+      <button class="bs" id="aScript" style="width:100%;margin-top:8px">📋 Copiar el programa del resumen</button>
     </div>
     <div class="card">
       <div class="ct">Celular del local</div>
@@ -454,6 +455,7 @@ function pintarAjustes(){
   $("h1a").value=(lv[0]||[])[0]||""; $("h1b").value=(lv[0]||[])[1]||""; $("h2a").value=(lv[1]||[])[0]||""; $("h2b").value=(lv[1]||[])[1]||""; $("h3a").value=sa[0]||""; $("h3b").value=sa[1]||""; $("hTol").value=R.tolerancia??5;
   const fl=$("fLista"); fl.innerHTML=(R.feriados||[]).length?"":'<span class="mu">No hay feriados cargados.</span>';
   (R.feriados||[]).slice().sort().forEach(f=>{ const b=document.createElement("button"); b.className="bs sm"; b.textContent=ddmm(f)+"  ✕"; b.onclick=async()=>{ try{ await guardarR({...R,feriados:R.feriados.filter(x=>x!==f)}); pintarAjustes(); }catch(e){ toast(e.message); } }; fl.appendChild(b); });
+  $("aMails").value=R.mails||(LS.get("cierres_cfg",{})||{}).mails||"coloniaadm@prolimpio.com.uy,colonia@prolimpio.com.uy";
   $("aSheetInfo").innerHTML='Planilla: <a href="https://docs.google.com/spreadsheets/d/'+esc(cfg.sheetId)+'" target="_blank">abrir en Google Sheets</a><br>Cuenta conectada: '+esc(LS.get("reloj_mail","—"));
 }
 $("aAgregar").onclick=async()=>{ const nm=$("aNuevo").value.trim(); if(!nm){ toast("Escribí el nombre"); return; }
@@ -463,7 +465,11 @@ $("aHorario").onclick=async()=>{ const v=id=>$(id).value; const lv=[[v("h1a"),v(
   try{ await guardarR({...R,horario:{lv,sab},tolerancia:Math.max(0,parseInt($("hTol").value,10)||0)}); toast("✓ Horario guardado"); }catch(e){ toast(e.message); } };
 $("fAdd").onclick=async()=>{ const f=$("fFecha").value; if(!f){ toast("Elegí la fecha"); return; } try{ await guardarR({...R,feriados:[...new Set([...(R.feriados||[]),f])]}); $("fFecha").value=""; pintarAjustes(); }catch(e){ toast(e.message); } };
 let progMail=""; fetch("mail-reloj.gs",{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>progMail=t).catch(()=>{});
-$("aScript").onclick=async()=>{ if(!progMail){ toast("Todavía se está cargando, probá en un segundo"); return; } try{ await navigator.clipboard.writeText(progMail); toast("✓ Programa copiado: pegalo en la planilla → Extensiones → Apps Script, en un archivo nuevo",5000); }catch(e){ const w=window.open("","_blank"); if(w) w.document.write("<pre>"+progMail.replace(/</g,"&lt;")+"</pre>"); } };
+$("aScript").onclick=async()=>{ if(!progMail){ toast("Todavía se está cargando, probá en un segundo"); return; }
+  const mails=$("aMails").value.split(",").map(x=>x.trim()).filter(Boolean).join(","); if(!mails){ toast("Poné al menos un mail"); return; }
+  if(mails!==R.mails){ try{ await guardarR({...R,mails}); }catch(e){} }
+  const txt=progMail.replace('"coloniaadm@prolimpio.com.uy,colonia@prolimpio.com.uy"',JSON.stringify(mails)).replace('const RELOJ_LOCAL = "Colonia";','const RELOJ_LOCAL = '+JSON.stringify(cfg.local||"Colonia")+';');
+  try{ await navigator.clipboard.writeText(txt); toast("✓ Programa copiado: pegalo en la planilla → Extensiones → Apps Script, en un archivo nuevo",5000); }catch(e){ const w=window.open("","_blank"); if(w) w.document.write("<pre>"+txt.replace(/</g,"&lt;")+"</pre>"); } };
 $("aAbrir").onclick=()=>window.open("https://docs.google.com/spreadsheets/d/"+cfg.sheetId,"_blank");
 const linkCfg=()=>location.origin+location.pathname+"#config="+b64e({local:cfg.local,sheetId:cfg.sheetId});
 $("aLink").onclick=async()=>{ try{ await navigator.clipboard.writeText(linkCfg()); toast("✓ Link copiado: pegalo en WhatsApp al celular del local"); }catch(e){ prompt("Copiá este link",linkCfg()); } };
