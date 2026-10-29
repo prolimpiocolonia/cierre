@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#E84400">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reloj">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>Reloj PROlimpio</title>
+<style>
+:root{--ac:#E84400;--ac2:#C2410C;--bg:#FDF3E9;--card:#fff;--tx:#1F0D05;--mu:#7A2E0A;--bd:#F2C9A0;--ok:#14532D;--okbg:#DCFCE7;--wr:#92400E;--wrbg:#FEF3C7;--er:#7F1D1D;--erbg:#FDE4E1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{background:var(--ac);color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top))}
+header h1{margin:0;font-size:1.15rem}
+header .sub{font-size:.85rem;opacity:.9}
+.bar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 12px;font-size:.85rem;cursor:pointer}
+main{max-width:640px;margin:0 auto;padding:12px 16px 60px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
+.ct{font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);font-weight:700;margin-bottom:8px}
+label{display:block;font-size:.85rem;color:var(--mu);margin:8px 0 3px}
+input,select{width:100%;font:inherit;padding:10px;border:1px solid var(--bd);border-radius:10px;background:#fff;color:var(--tx)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+button{font:inherit;border:0;border-radius:12px;padding:12px 14px;cursor:pointer;color:inherit}
+.bp{background:var(--ac);color:#fff;font-weight:700;width:100%}
+.bs{background:#fff;color:var(--ac2);border:1px solid var(--bd);font-weight:600}
+.bd{background:var(--erbg);color:var(--er);font-weight:600}
+.sm{padding:7px 10px;font-size:.85rem;border-radius:9px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.mu{color:var(--mu);font-size:.85rem}
+.msg{padding:10px 12px;border-radius:10px;margin:8px 0;font-size:.92rem}.msg.ok{background:var(--okbg);color:var(--ok)}.msg.er{background:var(--erbg);color:var(--er)}.msg.wr{background:var(--wrbg);color:var(--wr)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}td,th{padding:7px 4px;border-bottom:1px solid #F7E2CC;text-align:left;vertical-align:top}td.r,th.r{text-align:right;white-space:nowrap}
+th{font-size:.75rem;color:var(--mu);text-transform:uppercase;letter-spacing:.3px}
+.tw{overflow-x:auto}
+#toast{position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));max-width:600px;margin:auto;padding:12px 14px;border-radius:12px;background:#1F0D05;color:#fff;display:none;z-index:30}
+.hide{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+.reloj{text-align:center;padding:4px 0 2px}
+.reloj .h{font-size:3.2rem;font-weight:800;color:var(--ac2);line-height:1;font-variant-numeric:tabular-nums}
+.reloj .d{color:var(--mu);font-size:.95rem;margin-top:4px}
+.emps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.emp{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:112px}
+.emp b{font-size:1.25rem}
+.emp .es{font-size:.82rem;color:var(--mu)}
+.tag{display:inline-block;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:700;margin-top:auto;align-self:flex-start}
+.tag.in{background:var(--okbg);color:var(--ok)}.tag.out{background:var(--wrbg);color:var(--wr)}.tag.er{background:var(--erbg);color:var(--er)}.tag.nu{background:#FBE3CF;color:var(--mu)}
+.ov{position:fixed;inset:0;background:rgba(31,13,5,.55);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.sh{background:#fff;border-radius:18px;width:100%;max-width:380px;padding:18px;max-height:100%;overflow:auto}
+.sh .who{font-size:1.6rem;font-weight:800}
+.dots{display:flex;gap:12px;justify-content:center;margin:12px 0 4px}.dots i{width:15px;height:15px;border-radius:50%;border:2px solid var(--tx)}.dots i.on{background:var(--tx)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.pad button{font-size:1.5rem;font-weight:700;background:var(--bg);border:1px solid var(--bd);padding:12px 0}
+.pad button.k{font-size:.85rem;font-weight:600}
+.err{color:var(--er);font-weight:600;text-align:center;min-height:22px;font-size:.9rem}
+.foto{width:100%;border-radius:12px;display:block;margin:10px 0;background:var(--bg)}
+.ok-t{text-align:center}.ok-t .h{font-size:3.4rem;font-weight:800;line-height:1.05}
+.mk{display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:.75rem;margin:0 6px 6px 0;vertical-align:top}
+.mk img,.mk .ni{width:48px;height:60px;border-radius:7px;object-fit:cover;background:#FBE3CF;border:1px solid var(--bd)}
+.mk .ni{display:flex;align-items:center;justify-content:center;font-size:.62rem;color:var(--mu);text-align:center;padding:2px}
+tr.cl{cursor:pointer}tr.sel td{background:#FEF0E3}
+.fer{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+details summary{cursor:pointer;color:var(--ac2);font-weight:600;margin:6px 0}
+.ln{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F7E2CC}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="titulo">PROlimpio · Reloj</h1>
+  <div class="sub" id="subt">Configuración inicial</div>
+  <div class="bar">
+    <span class="pill" id="gbtn">Conectar Google</span>
+    <span class="pill hide" id="rsbtn">📊 Resumen</span>
+    <span class="pill hide" id="dibtn">🗓️ Marcas</span>
+    <span class="pill hide" id="ajbtn">⚙️ Ajustes</span>
+  </div>
+</header>
+<main>
+  <!-- CONFIGURACIÓN INICIAL -->
+  <section id="vSetup" class="hide">
+    <div class="card">
+      <div class="ct">Bienvenida</div>
+      <p>Con esta app cada funcionario marca entrada y salida con su PIN y una foto. Las marcas se guardan en la planilla de Google del local, y a fin de mes queda el resumen de faltas, llegadas tarde y horas extra.</p>
+      <p class="mu">Si ya configuraste el reloj en otro celular, abrí acá el <b>link de configuración</b> que te dio esa app y listo.</p>
+    </div>
+    <div class="card">
+      <div class="ct">Planilla de Google</div>
+      <label>Nombre del local</label><input id="sLocal" placeholder="Colonia">
+      <label>Link de la planilla de cierres (recomendado)</label><input id="sSheet" placeholder="https://docs.google.com/spreadsheets/d/…">
+      <div class="mu">El reloj agrega sus hojas a esa misma planilla, así el celular del local ya tiene acceso. Si lo dejás vacío, se crea una planilla nueva.</div>
+      <button class="bp" id="sGo" style="margin-top:12px">Conectar con Google y empezar</button>
+      <div id="sMsg"></div>
+    </div>
+  </section>
+
+  <!-- MARCAR -->
+  <section id="vMarcar" class="hide">
+    <div class="card">
+      <div class="reloj"><div class="h" id="hora">--:--</div><div class="d" id="fechaHoy"></div></div>
+    </div>
+    <div id="aviso"></div>
+    <div class="ct" style="margin:16px 2px 8px">¿Quién marca? Tocá tu nombre</div>
+    <div class="emps" id="emps"><div class="mu">Cargando funcionarios…</div></div>
+  </section>
+
+  <!-- RESUMEN -->
+  <section id="vResumen" class="hide">
+    <div class="card">
+      <div class="ct" id="rTit">Resumen del mes</div>
+      <label>Mes</label><input type="month" id="rMes">
+      <div class="mu" id="rNota" style="margin-top:8px"></div>
+      <div class="tw" style="margin-top:8px"><table>
+        <thead><tr><th>Funcionario</th><th class="r">Días</th><th class="r">Faltas</th><th class="r">Tarde</th><th class="r">Horas</th><th class="r">Extra</th></tr></thead>
+        <tbody id="rBody"></tbody></table></div>
+      <div class="mu" style="margin-top:6px">Tocá un funcionario para ver el detalle día por día.</div>
+      <div class="row" style="margin-top:12px"><button class="bp" id="rPlanilla">📄 Generar planilla en Google</button></div>
+      <div id="rMsg"></div>
+    </div>
+    <div class="card hide" id="dCard">
+      <div class="ct" id="dTit"></div>
+      <div class="tw"><table>
+        <thead><tr><th>Día</th><th>Marcas</th><th class="r">Trabajó</th><th class="r">Extra</th><th>Estado</th></tr></thead>
+        <tbody id="dBody"></tbody></table></div>
+    </div>
+    <button class="bs" id="rVolver" style="width:100%">← Volver a marcar</button>
+  </section>
+
+  <!-- MARCAS POR DÍA -->
+  <section id="vDia" class="hide">
+    <div class="card">
+      <div class="ct">Marcas por día</div>
+      <label>Día</label><input type="date" id="diDia">
+      <div class="mu" style="margin-top:8px">Acá ves las fotos, borrás una marca equivocada o agregás una que se olvidaron. Las agregadas a mano quedan señaladas.</div>
+    </div>
+    <div id="diLista"></div>
+    <button class="bs" id="diVolver" style="width:100%">← Volver a marcar</button>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="vAjustes" class="hide">
+    <div class="card">
+      <div class="ct">Funcionarios</div>
+      <div class="mu">Cada uno necesita un PIN de 4 números para marcar. "Faltas desde" evita que se cuenten faltas de antes de empezar a usar el reloj.</div>
+      <div id="aEmps"></div>
+      <label style="margin-top:12px">Agregar funcionario</label>
+      <div class="row"><input id="aNuevo" placeholder="Nombre y apellido" style="flex:3"><button class="bs" id="aAgregar">Agregar</button></div>
+    </div>
+    <div class="card">
+      <div class="ct">Horario</div>
+      <div class="mu">Lunes a viernes</div>
+      <div class="g2">
+        <div><label>Entrada mañana</label><input type="time" id="h1a"></div><div><label>Salida mañana</label><input type="time" id="h1b"></div>
+        <div><label>Entrada tarde</label><input type="time" id="h2a"></div><div><label>Salida tarde</label><input type="time" id="h2b"></div>
+      </div>
+      <div class="mu" style="margin-top:10px">Sábados</div>
+      <div class="g2"><div><label>Entrada</label><input type="time" id="h3a"></div><div><label>Salida</label><input type="time" id="h3b"></div></div>
+      <label>Tolerancia para llegadas tarde (minutos)</label><input id="hTol" inputmode="numeric">
+      <button class="bp" id="aHorario" style="margin-top:12px">Guardar horario</button>
+    </div>
+    <div class="card">
+      <div class="ct">Feriados y días sin trabajo</div>
+      <div class="mu">Esos días no cuentan faltas, y lo trabajado cuenta como hora extra.</div>
+      <div class="row" style="margin-top:8px"><input type="date" id="fFecha" style="flex:2"><button class="bs" id="fAdd">Agregar</button></div>
+      <div class="fer" id="fLista"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Planilla</div>
+      <div id="aSheetInfo" class="mu"></div>
+      <button class="bs" id="aAbrir" style="width:100%;margin-top:8px">Abrir planilla</button>
+    </div>
+    <div class="card">
+      <div class="ct">Celular del local</div>
+      <p class="mu">Abrí este link en el celular del local: queda configurado con la misma planilla. Después agregalo a la pantalla de inicio.</p>
+      <div class="row"><button class="bs" id="aLink">📋 Copiar link de configuración</button><button class="bs" id="aShare">📤 Compartir</button></div>
+    </div>
+    <div class="card">
+      <div class="ct">PIN de administración</div>
+      <p class="mu">Con PIN, en el celular del local solo se ve la pantalla de marcar: para entrar a Resumen, Marcas o Ajustes hay que ponerlo.</p>
+      <label>PIN nuevo (4 números)</label><input id="aPin" inputmode="numeric" maxlength="4">
+      <div class="row" style="margin-top:8px"><button class="bs" id="aPinOk">Poner PIN</button><button class="bs" id="aPinNo">Quitar PIN</button></div>
+    </div>
+    <div class="card">
+      <button class="bs" id="aVolver" style="width:100%">← Volver a marcar</button>
+      <details><summary>Borrar la configuración de este celular</summary><button class="bd" id="aReset" style="width:100%">Borrar configuración</button><div class="mu">La planilla y las marcas no se borran.</div></details>
+    </div>
+  </section>
+</main>
+<input type="file" id="fCam" accept="image/*" capture="user" class="hide">
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+// Mismo proyecto de Google que la app de cierres.
+const CLIENT_ID="590485373332-ft5l9d7md2ggoluku7pa8936cu6qlilg.apps.googleusercontent.com";
+const SCOPES="https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email";
+const H_CFG="RelojConfig", H_MAR="RelojMarcas", H_FOT="RelojFotos";
+const HEAD_MAR=["Fecha","Hora","Funcionario","Tipo","Foto","Manual","Borrada","Timestamp","IdFuncionario"];
+const DIAS=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Setiembre","Octubre","Noviembre","Diciembre"];
+const CFG_DEF={emps:[
+  {id:"daiana",nombre:"Daiana Bichi",pin:"",desde:"2026-11-01",activo:true},
+  {id:"florencia",nombre:"Florencia Banega",pin:"",desde:"2026-11-01",activo:true},
+  {id:"antonio",nombre:"Antonio",pin:"",desde:"2026-11-01",activo:true},
+  {id:"victoria",nombre:"Victoria",pin:"",desde:"2026-11-01",activo:true}],
+  horario:{lv:[["09:00","13:00"],["14:30","18:30"]],sab:[["09:00","13:00"]]},tolerancia:5,feriados:[],pinAdmin:"",reportes:[]};
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
+const p2=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());
+const hoyISO=()=>iso(new Date());
+const hm=t=>{const d=new Date(t);return p2(d.getHours())+":"+p2(d.getMinutes());};
+const dIso=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c);};
+const at=(d,h)=>{const[x,y]=h.split(":").map(Number);const r=new Date(d);r.setHours(x,y,0,0);return r.getTime();};
+const fmin=m=>{m=Math.round(m);return Math.floor(m/60)+":"+p2(m%60);};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nom1=n=>String(n||"").trim().split(/\s+/)[0];
+const ddmm=f=>f.slice(8)+"/"+f.slice(5,7)+"/"+f.slice(0,4);
+const toast=(t,ms=3500)=>{const e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",ms);};
+const sha=async s=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))).map(x=>x.toString(16).padStart(2,"0")).join("");
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64d=s=>{s=s.replace(/-/g,"+").replace(/_/g,"/");return JSON.parse(decodeURIComponent(escape(atob(s+"===".slice((s.length+3)%4)))));};
+const pinHash=(id,p)=>sha("reloj:"+id+":"+p);
+
+let cfg=LS.get("reloj_cfg",null), R=null, token=null, marcas=[], desbloqueado=false, fotoCache={}, mesSel=null, empSel=null;
+
+// ── configuración por link (#config=...) ──
+if(location.hash.startsWith("#config=")){ try{ const c=b64d(location.hash.slice(8)); if(c&&c.sheetId){ cfg={local:c.local||"",sheetId:c.sheetId}; LS.set("reloj_cfg",cfg); toast("✓ Celular configurado para el reloj de PROlimpio "+cfg.local); } }catch(e){ toast("El link de configuración no es válido"); } try{history.replaceState(null,"",location.pathname);}catch(e){} }
+// Si en este navegador ya está la app de cierres, uso su misma planilla.
+if(!cfg){ const cc=LS.get("cierres_cfg",null); if(cc&&cc.sheetId){ cfg={local:cc.local||"",sheetId:cc.sheetId}; LS.set("reloj_cfg",cfg); } }
+
+// ── Google ──
+const tokGuardado=()=>{const o=LS.get("reloj_tok",null);return o&&o.exp>Date.now()+60000?o.t:null;};
+let gisListo=false;
+function cargarGIS(){const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.async=true;s.onload=()=>{gisListo=true;if(!token&&cfg&&cfg.sheetId&&LS.get("reloj_mail",""))conectar(true);};document.head.appendChild(s);}
+function conectar(auto,despues){
+  if(!window.google?.accounts?.oauth2){ if(!auto) toast("Google está cargando, probá en un segundo"); return; }
+  const hint=LS.get("reloj_mail","")||LS.get("cierres_mail","");
+  const cl=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,...(hint?{hint}:{}),
+    callback:async r=>{ if(!r.access_token){ pintarG(); return; } token=r.access_token; LS.set("reloj_tok",{t:token,exp:Date.now()+(r.expires_in||3600)*1000});
+      try{const j=await fetch("https://oauth2.googleapis.com/tokeninfo?access_token="+token).then(x=>x.json()); if(j.email) LS.set("reloj_mail",j.email);}catch(e){}
+      pintarG(); pintarCabecera(); if(despues) await despues(); else await cargarTodo(); },
+    error_callback:()=>pintarG()});
+  cl.requestAccessToken(hint?{prompt:""}:{});
+}
+function pintarG(){ $("gbtn").textContent=token?"🟢 Google conectado":"🔄 Conectar Google"; pintarAviso(); }
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(token&&!tokGuardado()){ token=null; pintarG(); if(gisListo) conectar(true); } else if(token) cargarMarcas().then(pintarMarcar).catch(()=>{}); } });
+async function api(url,opt={}){ const r=await fetch(url,{...opt,headers:{Authorization:"Bearer "+token,"Content-Type":"application/json",...(opt.headers||{})}}); if(r.status===401){ LS.del("reloj_tok"); token=null; pintarG(); throw new Error("Se venció la conexión con Google: tocá Conectar Google"); } return r; }
+const SH="https://sheets.googleapis.com/v4/spreadsheets/";
+const rng=r=>encodeURIComponent(r);
+async function asegurarHojas(){
+  const m=await api(SH+cfg.sheetId+"?fields=sheets.properties"); if(!m.ok) throw new Error(m.status===403||m.status===404?"Esta cuenta de Google no tiene acceso a la planilla. Entrá con la cuenta del local o compartí la planilla con esta cuenta.":"No pude abrir la planilla");
+  const j=await m.json(); const tit=(j.sheets||[]).map(s=>s.properties.title); const falta=[H_CFG,H_MAR,H_FOT].filter(t=>!tit.includes(t));
+  if(falta.length){
+    await api(SH+cfg.sheetId+":batchUpdate",{method:"POST",body:JSON.stringify({requests:falta.map(t=>({addSheet:{properties:{title:t}}}))})});
+    if(falta.includes(H_MAR)) await api(SH+cfg.sheetId+"/values/"+rng(H_MAR+"!A1")+":append?valueInputOption=RAW",{method:"POST",body:JSON.stringify({values:[HEAD_MAR]})});
+    if(falta.includes(H_FOT)) await api(SH+cfg.sheetId+"/values/"+rng(H_FOT+"!A1")+":append?valueInputOption=RAW",{method:"POST",body:JSON.stringify({values:[["Id","Foto"]]})});
+    if(falta.includes(H_CFG)) await guardarR(CFG_DEF);
+  }
+  return tit;
+}
+async function crearPlanilla(nombre){
+  const r=await api(SH.slice(0,-1),{method:"POST",body:JSON.stringify({properties:{title:"PROlimpio "+nombre+" – Reloj",locale:"es_UY",timeZone:"America/Montevideo"}})});
+  if(!r.ok) throw new Error("No pude crear la planilla en Google"); return (await r.json()).spreadsheetId;
+}
+async function cargarR(){ const r=await api(SH+cfg.sheetId+"/values/"+rng(H_CFG+"!A1")); const j=await r.json(); let v=null; try{v=JSON.parse(((j.values||[])[0]||[])[0]||"null");}catch(e){} R={...CFG_DEF,...(v||{})}; }
+async function guardarR(nuevo){ const r=await api(SH+cfg.sheetId+"/values/"+rng(H_CFG+"!A1")+"?valueInputOption=RAW",{method:"PUT",body:JSON.stringify({values:[[JSON.stringify(nuevo)]]})}); if(!r.ok) throw new Error("No pude guardar en la planilla"); R=nuevo; }
+async function cargarMarcas(){
+  const r=await api(SH+cfg.sheetId+"/values/"+rng(H_MAR+"!A2:I")); const j=await r.json();
+  marcas=(j.values||[]).map((v,i)=>({fila:i+2,fecha:v[0]||"",hora:v[1]||"",nombre:v[2]||"",foto:v[4]||"",manual:v[5]==="sí",borrada:v[6]==="sí",t:Number(v[7])||0,emp:v[8]||""})).filter(x=>x.fecha&&x.t&&!x.borrada);
+}
+async function subirFoto(dataUrl){
+  const id="f"+Date.now().toString(36);
+  const r=await api(SH+cfg.sheetId+"/values/"+rng(H_FOT+"!A1")+":append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",{method:"POST",body:JSON.stringify({values:[[id,dataUrl]]})});
+  if(!r.ok) throw new Error("foto"); const j=await r.json(); const m=(j.updates?.updatedRange||"").match(/!A(\d+)/); fotoCache[m?H_FOT+"!B"+m[1]:id]=dataUrl; return m?H_FOT+"!B"+m[1]:"";
+}
+async function traerFotos(refs){ refs=refs.filter(x=>x&&!(x in fotoCache)); if(!refs.length) return;
+  for(let i=0;i<refs.length;i+=40){ const part=refs.slice(i,i+40); const r=await api(SH+cfg.sheetId+"/values:batchGet?"+part.map(x=>"ranges="+rng(x)).join("&")); const j=await r.json(); (j.valueRanges||[]).forEach((vr,k)=>{ fotoCache[part[k]]=((vr.values||[])[0]||[])[0]||""; }); } }
+async function agregarMarca(e,foto,cuando){
+  const t=cuando||Date.now(); const d=new Date(t); const f=iso(d);
+  const delDia=marcas.filter(m=>m.emp===e.id&&m.fecha===f).sort((a,b)=>a.t-b.t);
+  if(!cuando&&delDia.length&&t-delDia[delDia.length-1].t<60000) throw new Error("Ya marcaste hace menos de un minuto.");
+  const tipo=cuando?"":(delDia.length%2?"Salida":"Entrada");
+  const r=await api(SH+cfg.sheetId+"/values/"+rng(H_MAR+"!A1")+":append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",{method:"POST",body:JSON.stringify({values:[[f,hm(t),e.nombre,tipo||"Manual",foto||"",cuando?"sí":"","",String(t),e.id]]})});
+  if(!r.ok) throw new Error("No se pudo guardar la marca");
+  await cargarMarcas(); return {tipo:tipo||"Marca",t};
+}
+
+// ── vistas ──
+function vista(v){ ["vSetup","vMarcar","vResumen","vDia","vAjustes"].forEach(x=>$(x).classList.toggle("hide",x!==v)); window.scrollTo(0,0); }
+function pintarCabecera(){ const ok=!!(cfg&&cfg.sheetId); ["rsbtn","dibtn","ajbtn"].forEach(x=>$(x).classList.toggle("hide",!ok)); $("titulo").textContent="PROlimpio "+(cfg?.local||"")+" · Reloj"; $("subt").textContent=ok?(LS.get("reloj_mail","")||"Sin conectar a Google"):"Configuración inicial"; document.title="Reloj "+(cfg?.local||""); }
+function iniciar(){ pintarCabecera(); pintarG(); if(!cfg||!cfg.sheetId){ vista("vSetup"); return; } vista("vMarcar"); pintarMarcar(); const t=tokGuardado(); if(t){ token=t; pintarG(); cargarTodo(); } }
+async function cargarTodo(){ try{ await asegurarHojas(); await cargarR(); await cargarMarcas(); pintarMarcar(); autoReporte(); }catch(e){ $("aviso").innerHTML='<div class="msg er">'+esc(e.message)+'</div>'; } }
+function pintarAviso(){ if(!$("aviso")) return; $("aviso").innerHTML=token?"":'<div class="msg wr">Falta conectar Google para guardar las marcas. <button class="bs sm" onclick="conectar(false)">Conectar Google</button></div>'; }
+
+// reloj en pantalla
+setInterval(()=>{ const n=new Date(); $("hora").textContent=p2(n.getHours())+":"+p2(n.getMinutes())+":"+p2(n.getSeconds()); $("fechaHoy").textContent=DIAS[n.getDay()]+" "+n.getDate()+" de "+MESES[n.getMonth()].toLowerCase(); if(pintarMarcar.dia&&pintarMarcar.dia!==hoyISO()) pintarMarcar(); },1000);
+try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(()=>{});}catch(e){}
+
+// ── marcar ──
+function pintarMarcar(){ pintarMarcar.dia=hoyISO(); const box=$("emps"); if(!R){ box.innerHTML='<div class="mu">'+(token?"Cargando funcionarios…":"Conectá Google para ver los funcionarios.")+'</div>'; return; }
+  const act=R.emps.filter(e=>e.activo!==false); if(!act.length){ box.innerHTML='<div class="mu">No hay funcionarios. Agregalos en Ajustes.</div>'; return; }
+  box.innerHTML=""; act.forEach(e=>{ const it=marcas.filter(m=>m.emp===e.id&&m.fecha===hoyISO()).sort((a,b)=>a.t-b.t); const ult=it[it.length-1]; const entra=it.length%2===0;
+    const b=document.createElement("button"); b.className="emp"; b.innerHTML='<b></b><span class="es"></span><span class="tag"></span>';
+    b.querySelector("b").textContent=nom1(e.nombre); b.querySelector(".es").textContent=ult?(it.length%2?"Entró ":"Salió ")+hm(ult.t):"Sin marcas hoy";
+    const tg=b.querySelector(".tag"); if(!e.pin){tg.className="tag nu";tg.textContent="Falta su PIN";} else {tg.className="tag "+(entra?"in":"out");tg.textContent=entra?"Marcar entrada":"Marcar salida";}
+    b.onclick=()=>empezar(e); box.appendChild(b); }); }
+
+function modal(html){ $("modal").innerHTML='<div class="ov"><div class="sh">'+html+'</div></div>'; return $("modal").firstChild.firstChild; }
+function cerrar(){ $("modal").innerHTML=""; document.onkeydown=null; }
+function pinPad(titulo,sub,alTerminar){ let v="";
+  const sh=modal('<div class="who"></div><div class="mu" id="pSub"></div><div class="dots"><i></i><i></i><i></i><i></i></div><div class="err" id="pErr"></div><div class="pad">'+[1,2,3,4,5,6,7,8,9].map(n=>'<button data-k="'+n+'">'+n+'</button>').join("")+'<button class="k" data-k="x">Cancelar</button><button data-k="0">0</button><button class="k" data-k="b">Borrar</button></div>');
+  sh.querySelector(".who").textContent=titulo; $("pSub").textContent=sub;
+  const pint=()=>sh.querySelectorAll(".dots i").forEach((d,i)=>d.classList.toggle("on",i<v.length));
+  const tecla=async k=>{ if(k==="x") return cerrar(); if(k==="b"){v=v.slice(0,-1);pint();return;} if(v.length>=4) return; v+=k; pint(); $("pErr").textContent="";
+    if(v.length===4){ const ok=await alTerminar(v); if(!ok){ v=""; pint(); if($("pErr")) $("pErr").textContent="PIN incorrecto. Probá de nuevo."; } } };
+  sh.querySelectorAll(".pad button").forEach(b=>b.onclick=()=>tecla(b.dataset.k));
+  document.onkeydown=ev=>{ if(/^\d$/.test(ev.key)) tecla(ev.key); else if(ev.key==="Backspace") tecla("b"); else if(ev.key==="Escape") tecla("x"); };
+}
+function empezar(e){
+  if(!token||!tokGuardado()){ conectar(false,async()=>{ await cargarTodo(); }); toast("Conectando con Google, tocá tu nombre de nuevo en un momento"); return; }
+  if(!e.pin){ toast("A "+nom1(e.nombre)+" todavía no le pusieron PIN (Ajustes → Funcionarios)"); return; }
+  const n=marcas.filter(m=>m.emp===e.id&&m.fecha===hoyISO()).length; const tipo=n%2?"salida":"entrada";
+  pinPad(nom1(e.nombre),"Poné tu PIN para marcar "+tipo,async p=>{ if(await pinHash(e.id,p)!==e.pin) return false; document.onkeydown=null; pasoFoto(e,tipo); return true; });
+}
+function pasoFoto(e,tipo){
+  const sh=modal('<div class="who"></div><div class="mu">Sacate una foto con la cámara de adelante para registrar la '+tipo+'.</div><img class="foto hide" id="pv" alt="Tu foto"><div class="err" id="fErr"></div><div class="row"><button class="bs" id="fNo">Cancelar</button><button class="bp" id="fSi">📷 Sacar foto</button></div><button class="bp hide" id="fOk" style="margin-top:8px">Marcar '+tipo+'</button>');
+  sh.querySelector(".who").textContent=nom1(e.nombre);
+  let foto=null; const inp=$("fCam");
+  $("fNo").onclick=cerrar; $("fSi").onclick=()=>{ inp.value=""; inp.click(); };
+  inp.onchange=async()=>{ const f=inp.files&&inp.files[0]; if(!f) return; try{ foto=await achicar(f,e.nombre); $("pv").src=foto; $("pv").classList.remove("hide"); $("fSi").textContent="Sacar otra"; $("fSi").className="bs"; $("fOk").classList.remove("hide"); }catch(err){ $("fErr").textContent="No se pudo leer la foto. Probá de nuevo."; } };
+  $("fOk").onclick=async()=>{ const b=$("fOk"); b.disabled=true; b.textContent="Guardando…";
+    try{ const ref=await subirFoto(foto); const r=await agregarMarca(e,ref); listo(e,r); pintarMarcar(); }
+    catch(err){ b.disabled=false; b.textContent="Marcar "+tipo; $("fErr").textContent=err.message&&err.message.startsWith("Ya")?err.message:(err.message||"No se pudo guardar. Revisá internet y probá de nuevo."); } };
+}
+const achicar=(file,nombre)=>new Promise((res,rej)=>{ const fr=new FileReader(); fr.onerror=rej; fr.onload=()=>{ const im=new Image(); im.onerror=rej; im.onload=()=>{
+  const M=360; const k=Math.min(1,M/Math.max(im.width,im.height)); const w=Math.round(im.width*k), h=Math.round(im.height*k); const cv=document.createElement("canvas"); cv.width=w; cv.height=h; const g=cv.getContext("2d"); g.drawImage(im,0,0,w,h);
+  const n=new Date(); g.fillStyle="rgba(0,0,0,.55)"; g.fillRect(0,h-24,w,24); g.fillStyle="#fff"; g.font="600 13px -apple-system,Arial,sans-serif"; g.fillText(nom1(nombre)+"  "+ddmm(iso(n))+" "+hm(n.getTime()),8,h-8);
+  let q=.6, u=cv.toDataURL("image/jpeg",q); while(u.length>45000&&q>.2){ q-=.1; u=cv.toDataURL("image/jpeg",q); } res(u); }; im.src=fr.result; }; fr.readAsDataURL(file); });
+function listo(e,r){ const sh=modal('<div class="ok-t"><span class="tag '+(r.tipo==="Entrada"?"in":"out")+'">'+r.tipo+' registrada</span><div class="h num">'+hm(r.t)+'</div><div class="who"></div><div class="mu">'+(r.tipo==="Entrada"?"¡Buen día de trabajo!":"¡Hasta luego!")+'</div></div><button class="bp" id="okB" style="margin-top:14px">Listo</button>');
+  sh.querySelector(".who").textContent=nom1(e.nombre); $("okB").onclick=cerrar; setTimeout(()=>{ if(sh.isConnected) cerrar(); },4000); }
+
+// ── administración (con PIN) ──
+function pedirPin(despues){ if(!R){ toast(token?"Cargando…":"Conectá Google primero"); return; } if(!R.pinAdmin||desbloqueado) return despues();
+  pinPad("Administración","PIN de administración",async p=>{ if(await sha("reloj-admin:"+p)!==R.pinAdmin) return false; desbloqueado=true; cerrar(); despues(); return true; }); }
+$("gbtn").onclick=()=>{ if(cfg&&cfg.sheetId) conectar(false); };
+$("rsbtn").onclick=()=>pedirPin(abrirResumen);
+$("dibtn").onclick=()=>pedirPin(abrirDia);
+$("ajbtn").onclick=()=>pedirPin(abrirAjustes);
+["rVolver","diVolver","aVolver"].forEach(x=>$(x).onclick=()=>{ vista("vMarcar"); pintarMarcar(); });
+
+// ── cálculo ──
+function turnos(d){ const w=d.getDay(); if(w>=1&&w<=5) return R.horario.lv||[]; if(w===6) return R.horario.sab||[]; return []; }
+function laborable(d){ return turnos(d).length>0&&!(R.feriados||[]).includes(iso(d)); }
+function calcDia(d,its,e,hoy){ const f=iso(d), tr=turnos(d), lab=laborable(d), tol=Number(R.tolerancia)||0; const ts=its.map(x=>x.t).sort((a,b)=>a-b);
+  let trab=0; for(let i=0;i+1<ts.length;i+=2) trab+=(ts[i+1]-ts[i])/60000; const inc=ts.length%2===1;
+  const esp=lab?tr.reduce((s,t)=>s+(at(d,t[1])-at(d,t[0]))/60000,0):0;
+  let tardes=0,minT=0; if(lab) tr.forEach((t,k)=>{ const en=ts[2*k]; if(en==null) return; const x=(en-at(d,t[0]))/60000; if(x>tol){ tardes++; minT+=x; } });
+  let extra=0; if(ts.length&&!inc&&f!==hoy){ if(!lab) extra=trab; else if(trab-esp>tol) extra=trab-esp; }
+  const desde=e.desde||"0000-00-00"; const falta=lab&&!ts.length&&f<hoy&&f>=desde;
+  let est=""; if(falta) est="Falta"; else if(inc&&f<hoy) est="Falta una marca"; else if(!ts.length&&(R.feriados||[]).includes(f)) est="Feriado"; else if(!ts.length&&!tr.length) est="Libre";
+  return {f,d,its:its.slice().sort((a,b)=>a.t-b.t),trab,extra,tardes,minT,falta,inc:inc&&f<hoy,est,lab}; }
+function calcMes(y,m){ const hoy=hoyISO(), ult=new Date(y,m+1,0).getDate();
+  return R.emps.filter(e=>e.activo!==false||marcas.some(x=>x.emp===e.id&&x.fecha.startsWith(y+"-"+p2(m+1)))).map(e=>{ const r={e,dias:[],trab:0,faltas:0,tardes:0,minT:0,min:0,extra:0,inc:0};
+    for(let d=1;d<=ult;d++){ const dt=new Date(y,m,d), f=iso(dt); if(f>hoy) break; const its=marcas.filter(x=>x.emp===e.id&&x.fecha===f); const c=calcDia(dt,its,e,hoy); r.dias.push(c);
+      if(its.length) r.trab++; if(c.falta) r.faltas++; r.tardes+=c.tardes; r.minT+=c.minT; r.min+=c.trab; r.extra+=c.extra; if(c.inc) r.inc++; }
+    return r; }); }
+
+// ── resumen ──
+function mesAnterior(){ const n=new Date(); const p=new Date(n.getFullYear(),n.getMonth()-1,1); return p.getFullYear()+"-"+p2(p.getMonth()+1); }
+async function abrirResumen(){ vista("vResumen"); if(!mesSel){ mesSel=mesAnterior(); $("rMes").value=mesSel; } try{ await cargarMarcas(); }catch(e){} pintarResumen(); }
+$("rMes").onchange=()=>{ mesSel=$("rMes").value||mesAnterior(); empSel=null; pintarResumen(); };
+function pintarResumen(){ const[y,m]=mesSel.split("-").map(Number); const rows=calcMes(y,m-1); pintarResumen.rows=rows;
+  $("rTit").textContent="Resumen de "+MESES[m-1]+" "+y; const n=new Date(); const enCurso=n.getFullYear()===y&&n.getMonth()===m-1;
+  $("rNota").textContent=enCurso?"Mes en curso: se va completando día a día.":"Mes cerrado: listo para liquidar.";
+  $("rBody").innerHTML=rows.length?"":'<tr><td colspan="6" class="mu">No hay funcionarios.</td></tr>';
+  rows.forEach(r=>{ const tr=document.createElement("tr"); tr.className="cl"+(empSel===r.e.id?" sel":"");
+    tr.innerHTML='<td><b></b>'+(r.inc?'<br><span class="tag er" style="margin-top:3px">'+r.inc+' día'+(r.inc>1?"s":"")+' sin cerrar</span>':"")+'</td><td class="r num">'+r.trab+'</td><td class="r num" style="'+(r.faltas?"color:var(--er);font-weight:700":"")+'">'+r.faltas+'</td><td class="r num">'+r.tardes+'</td><td class="r num">'+fmin(r.min)+'</td><td class="r num" style="font-weight:700">'+fmin(r.extra)+'</td>';
+    tr.querySelector("b").textContent=r.e.nombre; tr.onclick=()=>{ empSel=r.e.id; pintarResumen(); }; $("rBody").appendChild(tr); });
+  const sel=rows.find(r=>r.e.id===empSel); $("dCard").classList.toggle("hide",!sel); if(sel) pintarDetalle(sel); }
+async function pintarDetalle(r){ $("dTit").textContent=r.e.nombre+" · día por día"; const tb=$("dBody"); tb.innerHTML="";
+  const dias=r.dias.filter(x=>x.lab||x.its.length); dias.forEach(x=>{ const tr=document.createElement("tr"); const tags=[];
+    if(x.est) tags.push('<span class="tag '+(x.est.startsWith("Falta")?"er":"nu")+'">'+x.est+'</span>'); if(x.tardes) tags.push('<span class="tag out">Tarde '+fmin(x.minT)+'</span>'); if(x.its.some(i=>i.manual)) tags.push('<span class="tag nu">A mano</span>');
+    tr.innerHTML='<td class="num" style="white-space:nowrap">'+DIAS[x.d.getDay()].slice(0,3)+" "+x.d.getDate()+'</td><td class="mks"></td><td class="r num">'+(x.its.length?fmin(x.trab):"–")+'</td><td class="r num">'+(x.extra?fmin(x.extra):"–")+'</td><td>'+tags.join(" ")+'</td>';
+    pintarMks(tr.querySelector(".mks"),x.its); tb.appendChild(tr); });
+  const refs=dias.flatMap(x=>x.its.map(i=>i.foto)); if(refs.some(f=>f&&!(f in fotoCache))){ try{ await traerFotos(refs); pintarFotosEn(tb); }catch(e){} } }
+function pintarMks(td,its){ if(!its.length){ td.innerHTML='<span class="mu">Sin marcas</span>'; return; }
+  its.forEach((it,i)=>{ const d=document.createElement("span"); d.className="mk"; const ok=it.foto&&fotoCache[it.foto];
+    d.innerHTML=(ok?'<img alt="">':'<span class="ni">'+(it.manual?"a mano":it.foto?"…":"sin foto")+'</span>')+'<span class="num">'+(i%2?"S ":"E ")+hm(it.t)+'</span>';
+    d.dataset.ref=it.foto||""; if(ok){ const im=d.querySelector("img"); im.src=fotoCache[it.foto]; im.onclick=()=>verFoto(fotoCache[it.foto],(i%2?"Salida ":"Entrada ")+hm(it.t)); } td.appendChild(d); }); }
+function pintarFotosEn(box){ box.querySelectorAll(".mk").forEach(d=>{ const ref=d.dataset.ref; const ni=d.querySelector(".ni"); if(ref&&ni&&fotoCache[ref]){ const im=document.createElement("img"); im.alt=""; im.src=fotoCache[ref]; const lbl=d.querySelector(".num").textContent; im.onclick=()=>verFoto(fotoCache[ref],lbl); ni.replaceWith(im); } }); }
+function verFoto(src,txt){ const sh=modal('<img class="foto" alt="Foto de la marca"><div class="row"><span class="num" style="align-self:center"></span><button class="bs" id="vfC">Cerrar</button></div>'); sh.querySelector("img").src=src; sh.querySelector(".row span").textContent=txt; $("vfC").onclick=cerrar; }
+
+// planilla mensual en Google
+async function generarPlanilla(y,m,silencioso){ const rows=calcMes(y,m-1); const nombre="Reloj "+MESES[m-1]+" "+y;
+  const meta=await (await api(SH+cfg.sheetId+"?fields=sheets.properties")).json(); let hoja=(meta.sheets||[]).find(s=>s.properties.title===nombre);
+  if(!hoja){ const r=await api(SH+cfg.sheetId+":batchUpdate",{method:"POST",body:JSON.stringify({requests:[{addSheet:{properties:{title:nombre}}}]})}); const j=await r.json(); hoja={properties:j.replies[0].addSheet.properties}; }
+  else await api(SH+cfg.sheetId+"/values/"+rng(nombre+"!A1:Z2000")+":clear",{method:"POST",body:"{}"});
+  const v=[["PROlimpio "+(cfg.local||"")+" – Planilla de "+MESES[m-1]+" "+y],[],["Funcionario","Días trabajados","Faltas","Llegadas tarde","Horas trabajadas","Horas extra"]];
+  rows.forEach(r=>v.push([r.e.nombre,r.trab,r.faltas,r.tardes,fmin(r.min),fmin(r.extra)]));
+  v.push([],["Detalle por día"],["Funcionario","Fecha","Día","Marcas","Trabajó","Extra","Tarde","Estado"]);
+  rows.forEach(r=>r.dias.forEach(x=>{ if(!x.lab&&!x.its.length) return; v.push([r.e.nombre,ddmm(x.f),DIAS[x.d.getDay()],x.its.map((it,i)=>(i%2?"S ":"E ")+hm(it.t)+(it.manual?"*":"")).join("  "),x.its.length?fmin(x.trab):"",x.extra?fmin(x.extra):"",x.tardes?fmin(x.minT):"",x.est]); }));
+  v.push([],["* marca agregada a mano. Generado "+ddmm(hoyISO())+" "+hm(Date.now())]);
+  await api(SH+cfg.sheetId+"/values/"+rng(nombre+"!A1")+"?valueInputOption=RAW",{method:"PUT",body:JSON.stringify({values:v})});
+  const k=y+"-"+p2(m); if(!(R.reportes||[]).includes(k)){ try{ await guardarR({...R,reportes:[...(R.reportes||[]),k]}); }catch(e){} }
+  return "https://docs.google.com/spreadsheets/d/"+cfg.sheetId+"/edit#gid="+hoja.properties.sheetId; }
+$("rPlanilla").onclick=async()=>{ const[y,m]=mesSel.split("-").map(Number); $("rMsg").innerHTML='<div class="msg wr">Armando la planilla…</div>';
+  try{ const url=await generarPlanilla(y,m); $("rMsg").innerHTML='<div class="msg ok">✓ Planilla "Reloj '+MESES[m-1]+' '+y+'" lista. <a href="'+url+'" target="_blank">Abrirla</a></div>'; }catch(e){ $("rMsg").innerHTML='<div class="msg er">'+esc(e.message||"No se pudo generar")+'</div>'; } };
+// El 1.º de cada mes (o la primera vez que se abre después) se arma sola la planilla del mes anterior.
+async function autoReporte(){ if(!R) return; const k=mesAnterior(); if((R.reportes||[]).includes(k)) return; const[y,m]=k.split("-").map(Number);
+  if(!marcas.some(x=>x.fecha.startsWith(k))) return; try{ await generarPlanilla(y,m,true); toast("✓ Quedó lista la planilla del reloj de "+MESES[m-1]); }catch(e){} }
+
+// ── marcas por día ──
+async function abrirDia(){ vista("vDia"); if(!$("diDia").value) $("diDia").value=hoyISO(); try{ await cargarMarcas(); }catch(e){} pintarDia(); }
+$("diDia").onchange=pintarDia;
+async function pintarDia(){ const f=$("diDia").value||hoyISO(); const d=dIso(f); const box=$("diLista"); box.innerHTML="";
+  R.emps.forEach(e=>{ const its=marcas.filter(x=>x.emp===e.id&&x.fecha===f).sort((a,b)=>a.t-b.t); if(e.activo===false&&!its.length) return; const c=calcDia(d,its,e,hoyISO());
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML='<div class="ct"></div><div class="mu">'+(its.length?"Trabajó "+fmin(c.trab)+(c.inc?" · falta una marca":""):(c.falta?"Falta":"Sin marcas"))+'</div><div class="lst"></div><label>Agregar marca a mano</label><div class="row"><input type="time" style="flex:2"><button class="bs addm">Agregar</button></div>';
+    card.querySelector(".ct").textContent=e.nombre; const lst=card.querySelector(".lst");
+    its.forEach((it,i)=>{ const ln=document.createElement("div"); ln.className="ln"; const m=document.createElement("div"); pintarMks(m,[it]); m.querySelector(".num").textContent=(i%2?"Salida ":"Entrada ")+hm(it.t)+(it.manual?" · a mano":"");
+      const del=document.createElement("button"); del.className="bd sm"; del.textContent="Borrar"; del.style.flex="0 0 auto";
+      del.onclick=async()=>{ if(del.dataset.c!=="1"){ del.dataset.c="1"; del.textContent="¿Seguro? Tocá otra vez"; setTimeout(()=>{ if(del.isConnected){ del.dataset.c=""; del.textContent="Borrar"; } },4000); return; }
+        try{ await api(SH+cfg.sheetId+"/values/"+rng(H_MAR+"!G"+it.fila)+"?valueInputOption=RAW",{method:"PUT",body:JSON.stringify({values:[["sí"]]})}); await cargarMarcas(); pintarDia(); toast("Marca borrada"); }catch(err){ toast(err.message||"No se pudo borrar"); } };
+      ln.append(m,del); lst.appendChild(ln); });
+    const tin=card.querySelector("input[type=time]"); card.querySelector(".addm").onclick=async()=>{ if(!tin.value){ toast("Elegí la hora"); return; }
+      try{ await agregarMarca(e,"",at(d,tin.value)); pintarDia(); toast("Marca agregada"); }catch(err){ toast(err.message||"No se pudo agregar"); } };
+    box.appendChild(card); });
+  const refs=marcas.filter(x=>x.fecha===f).map(x=>x.foto); if(refs.some(r=>r&&!(r in fotoCache))){ try{ await traerFotos(refs); pintarFotosEn(box); }catch(e){} } }
+
+// ── ajustes ──
+function abrirAjustes(){ vista("vAjustes"); pintarAjustes(); }
+function pintarAjustes(){
+  const box=$("aEmps"); box.innerHTML="";
+  R.emps.forEach(e=>{ const c=document.createElement("div"); c.style.cssText="border-top:1px solid #F7E2CC;margin-top:12px;padding-top:10px";
+    c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b></b><span class="tag '+(e.pin?"in":"er")+'" style="margin:0">'+(e.pin?"PIN puesto":"Sin PIN")+'</span></div>'+
+      '<label>Nombre</label><input class="nm"><div class="g2"><div><label>Faltas desde</label><input type="date" class="ds"></div><div><label>Nuevo PIN</label><input class="pn" inputmode="numeric" maxlength="4" placeholder="4 números" autocomplete="off"></div></div>'+
+      '<label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" class="ac" style="width:auto"> Activo (aparece para marcar)</label><button class="bs sm gu" style="margin-top:8px;width:100%">Guardar cambios de '+esc(nom1(e.nombre))+'</button>';
+    c.querySelector("b").textContent=e.nombre; c.querySelector(".nm").value=e.nombre; c.querySelector(".ds").value=e.desde||""; c.querySelector(".ac").checked=e.activo!==false;
+    c.querySelector(".gu").onclick=async()=>{ const nm=c.querySelector(".nm").value.trim(); const p=c.querySelector(".pn").value.trim(); if(!nm){ toast("Escribí el nombre"); return; }
+      let pin=e.pin; if(p){ if(!/^\d{4}$/.test(p)){ toast("El PIN tiene que ser de 4 números"); return; }
+        for(const o of R.emps){ if(o.id!==e.id&&o.pin&&await pinHash(o.id,p)===o.pin){ toast("Ese PIN ya lo tiene "+nom1(o.nombre)+". Elegí otro."); return; } } pin=await pinHash(e.id,p); }
+      const emps=R.emps.map(o=>o.id===e.id?{...o,nombre:nm,desde:c.querySelector(".ds").value||"",activo:c.querySelector(".ac").checked,pin}:o);
+      try{ await guardarR({...R,emps}); pintarAjustes(); pintarMarcar(); toast("✓ Guardado"+(p?". Anotá el PIN de "+nom1(nm)+": después no se puede ver":"")); }catch(err){ toast(err.message); } };
+    box.appendChild(c); });
+  const lv=R.horario.lv||[], sa=(R.horario.sab||[])[0]||["",""];
+  $("h1a").value=(lv[0]||[])[0]||""; $("h1b").value=(lv[0]||[])[1]||""; $("h2a").value=(lv[1]||[])[0]||""; $("h2b").value=(lv[1]||[])[1]||""; $("h3a").value=sa[0]||""; $("h3b").value=sa[1]||""; $("hTol").value=R.tolerancia??5;
+  const fl=$("fLista"); fl.innerHTML=(R.feriados||[]).length?"":'<span class="mu">No hay feriados cargados.</span>';
+  (R.feriados||[]).slice().sort().forEach(f=>{ const b=document.createElement("button"); b.className="bs sm"; b.textContent=ddmm(f)+"  ✕"; b.onclick=async()=>{ try{ await guardarR({...R,feriados:R.feriados.filter(x=>x!==f)}); pintarAjustes(); }catch(e){ toast(e.message); } }; fl.appendChild(b); });
+  $("aSheetInfo").innerHTML='Planilla: <a href="https://docs.google.com/spreadsheets/d/'+esc(cfg.sheetId)+'" target="_blank">abrir en Google Sheets</a><br>Cuenta conectada: '+esc(LS.get("reloj_mail","—"));
+}
+$("aAgregar").onclick=async()=>{ const nm=$("aNuevo").value.trim(); if(!nm){ toast("Escribí el nombre"); return; }
+  try{ await guardarR({...R,emps:[...R.emps,{id:"e"+Date.now().toString(36),nombre:nm,pin:"",desde:hoyISO(),activo:true}]}); $("aNuevo").value=""; pintarAjustes(); pintarMarcar(); toast("✓ "+nom1(nm)+" agregado: ponele un PIN"); }catch(e){ toast(e.message); } };
+$("aHorario").onclick=async()=>{ const v=id=>$(id).value; const lv=[[v("h1a"),v("h1b")],[v("h2a"),v("h2b")]].filter(t=>t[0]&&t[1]); const sab=[[v("h3a"),v("h3b")]].filter(t=>t[0]&&t[1]);
+  if([...lv,...sab].some(t=>t[0]>=t[1])){ toast("Cada salida tiene que ser después de su entrada"); return; }
+  try{ await guardarR({...R,horario:{lv,sab},tolerancia:Math.max(0,parseInt($("hTol").value,10)||0)}); toast("✓ Horario guardado"); }catch(e){ toast(e.message); } };
+$("fAdd").onclick=async()=>{ const f=$("fFecha").value; if(!f){ toast("Elegí la fecha"); return; } try{ await guardarR({...R,feriados:[...new Set([...(R.feriados||[]),f])]}); $("fFecha").value=""; pintarAjustes(); }catch(e){ toast(e.message); } };
+$("aAbrir").onclick=()=>window.open("https://docs.google.com/spreadsheets/d/"+cfg.sheetId,"_blank");
+const linkCfg=()=>location.origin+location.pathname+"#config="+b64e({local:cfg.local,sheetId:cfg.sheetId});
+$("aLink").onclick=async()=>{ try{ await navigator.clipboard.writeText(linkCfg()); toast("✓ Link copiado: pegalo en WhatsApp al celular del local"); }catch(e){ prompt("Copiá este link",linkCfg()); } };
+$("aShare").onclick=async()=>{ if(navigator.share){ try{ await navigator.share({title:"Reloj PROlimpio "+cfg.local,text:"Abrí este link en el celular del local para configurar el reloj:",url:linkCfg()}); }catch(e){} } else $("aLink").onclick(); };
+$("aPinOk").onclick=async()=>{ const p=$("aPin").value; if(!/^\d{4}$/.test(p)){ toast("El PIN tiene que ser de 4 números"); return; } try{ await guardarR({...R,pinAdmin:await sha("reloj-admin:"+p)}); $("aPin").value=""; desbloqueado=true; toast("✓ PIN de administración puesto"); }catch(e){ toast(e.message); } };
+$("aPinNo").onclick=async()=>{ try{ await guardarR({...R,pinAdmin:""}); toast("PIN quitado"); }catch(e){ toast(e.message); } };
+$("aReset").onclick=()=>{ if(confirm("¿Borrar la configuración de este celular? La planilla y las marcas no se borran.")){ LS.del("reloj_cfg"); LS.del("reloj_tok"); cfg=null; token=null; R=null; iniciar(); } };
+
+// ── setup ──
+$("sGo").onclick=()=>{ const local=$("sLocal").value.trim(); if(!local){ $("sMsg").innerHTML='<div class="msg er">Falta el nombre del local</div>'; return; }
+  const m=$("sSheet").value.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  conectar(false,async()=>{ try{ $("sMsg").innerHTML='<div class="msg wr">Preparando la planilla…</div>';
+    const sheetId=m?m[1]:await crearPlanilla(local); cfg={local,sheetId}; LS.set("reloj_cfg",cfg); await asegurarHojas(); toast("✓ Listo: el reloj quedó conectado a la planilla"); iniciar(); await cargarTodo();
+  }catch(e){ cfg=null; LS.del("reloj_cfg"); $("sMsg").innerHTML='<div class="msg er">'+esc(e.message)+'</div>'; } }); };
+if(cfg) $("sLocal").value=cfg.local||"";
+
+cargarGIS(); iniciar();
+</script>
+</body>
+</html>
