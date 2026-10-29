@@ -172,6 +172,11 @@ details summary{cursor:pointer;color:var(--ac2);font-weight:600;margin:6px 0}
       <button class="bs" id="aAbrir" style="width:100%;margin-top:8px">Abrir planilla</button>
     </div>
     <div class="card">
+      <div class="ct">Resumen por mail el 1.º de cada mes</div>
+      <p class="mu">Un programa dentro de la planilla manda el resumen del mes a los mismos mails que reciben los cierres. Se instala una sola vez desde una computadora, igual que el de los cierres.</p>
+      <button class="bs" id="aScript" style="width:100%">📋 Copiar el programa del resumen</button>
+    </div>
+    <div class="card">
       <div class="ct">Celular del local</div>
       <p class="mu">Abrí este link en el celular del local: queda configurado con la misma planilla. Después agregalo a la pantalla de inicio.</p>
       <div class="row"><button class="bs" id="aLink">📋 Copiar link de configuración</button><button class="bs" id="aShare">📤 Compartir</button></div>
@@ -457,6 +462,8 @@ $("aHorario").onclick=async()=>{ const v=id=>$(id).value; const lv=[[v("h1a"),v(
   if([...lv,...sab].some(t=>t[0]>=t[1])){ toast("Cada salida tiene que ser después de su entrada"); return; }
   try{ await guardarR({...R,horario:{lv,sab},tolerancia:Math.max(0,parseInt($("hTol").value,10)||0)}); toast("✓ Horario guardado"); }catch(e){ toast(e.message); } };
 $("fAdd").onclick=async()=>{ const f=$("fFecha").value; if(!f){ toast("Elegí la fecha"); return; } try{ await guardarR({...R,feriados:[...new Set([...(R.feriados||[]),f])]}); $("fFecha").value=""; pintarAjustes(); }catch(e){ toast(e.message); } };
+let progMail=""; fetch("mail-reloj.gs",{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>progMail=t).catch(()=>{});
+$("aScript").onclick=async()=>{ if(!progMail){ toast("Todavía se está cargando, probá en un segundo"); return; } try{ await navigator.clipboard.writeText(progMail); toast("✓ Programa copiado: pegalo en la planilla → Extensiones → Apps Script, en un archivo nuevo",5000); }catch(e){ const w=window.open("","_blank"); if(w) w.document.write("<pre>"+progMail.replace(/</g,"&lt;")+"</pre>"); } };
 $("aAbrir").onclick=()=>window.open("https://docs.google.com/spreadsheets/d/"+cfg.sheetId,"_blank");
 const linkCfg=()=>location.origin+location.pathname+"#config="+b64e({local:cfg.local,sheetId:cfg.sheetId});
 $("aLink").onclick=async()=>{ try{ await navigator.clipboard.writeText(linkCfg()); toast("✓ Link copiado: pegalo en WhatsApp al celular del local"); }catch(e){ prompt("Copiá este link",linkCfg()); } };
