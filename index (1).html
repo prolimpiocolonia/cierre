@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#E84400">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>Cierres de caja</title>
+<style>
+:root{--ac:#E84400;--ac2:#C2410C;--bg:#FDF3E9;--card:#fff;--tx:#1F0D05;--mu:#7A2E0A;--bd:#F2C9A0;--ok:#14532D;--okbg:#DCFCE7;--wr:#92400E;--wrbg:#FEF3C7;--er:#7F1D1D;--erbg:#FDE4E1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{background:var(--ac);color:#fff;padding:14px 16px calc(14px);padding-top:max(14px,env(safe-area-inset-top))}
+header h1{margin:0;font-size:1.15rem}
+header .sub{font-size:.85rem;opacity:.9}
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 12px;font-size:.85rem;cursor:pointer}
+main{max-width:640px;margin:0 auto;padding:12px 16px 60px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
+.ct{font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);font-weight:700;margin-bottom:8px}
+label{display:block;font-size:.85rem;color:var(--mu);margin:8px 0 3px}
+input,select,textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--bd);border-radius:10px;background:#fff;color:var(--tx)}
+input.warn{background:#FEF9C3;border-color:#EAB308}
+textarea{min-height:60px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+button{font:inherit;border:0;border-radius:12px;padding:12px 14px;cursor:pointer}
+.bp{background:var(--ac);color:#fff;font-weight:700;width:100%}
+.bs{background:#fff;color:var(--ac2);border:1px solid var(--bd);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.fotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.fotos div{position:relative}.fotos img{height:90px;border-radius:8px;border:1px solid var(--bd)}
+.fotos span{position:absolute;top:-6px;right:-6px;background:var(--er);color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:13px;cursor:pointer}
+.chk{padding:6px 10px;border-radius:8px;margin:4px 0;font-size:.9rem}.chk.ok{background:var(--okbg);color:var(--ok)}.chk.no{background:var(--erbg);color:var(--er)}
+.big{font-size:1.9rem;font-weight:800;color:var(--ac2)}
+.mu{color:var(--mu);font-size:.85rem}
+.msg{padding:10px 12px;border-radius:10px;margin:8px 0;font-size:.92rem}.msg.ok{background:var(--okbg);color:var(--ok)}.msg.er{background:var(--erbg);color:var(--er)}.msg.wr{background:var(--wrbg);color:var(--wr)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}td,th{padding:6px 4px;border-bottom:1px solid #F7E2CC;text-align:left}td.r,th.r{text-align:right}
+#toast{position:fixed;left:16px;right:16px;bottom:20px;max-width:600px;margin:auto;padding:12px 14px;border-radius:12px;background:#1F0D05;color:#fff;display:none;z-index:9}
+.hide{display:none!important}
+details summary{cursor:pointer;color:var(--ac2);font-weight:600;margin:6px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="titulo">PROlimpio · Cierres de caja</h1>
+  <div class="sub" id="subt">Configuración inicial</div>
+  <div class="bar">
+    <span class="pill" id="gbtn">Conectar Google</span>
+    <span class="pill" id="vtbtn">📈 Ventas</span>
+    <span class="pill" id="ajbtn">⚙️ Ajustes</span>
+  </div>
+</header>
+<main>
+  <!-- CONFIGURACIÓN INICIAL -->
+  <section id="vSetup" class="hide">
+    <div class="card">
+      <div class="ct">Bienvenida</div>
+      <p>Esta app lee la foto del cierre de caja, controla las cuentas y guarda cada cierre en una planilla de Google del local. Un programa de la planilla manda un mail con el total vendido y la foto.</p>
+      <p class="mu">Si ya configuraste la app en otro celular, abrí acá el <b>link de configuración</b> que te dio esa app y listo.</p>
+    </div>
+    <div class="card">
+      <div class="ct">1 · Datos del local</div>
+      <label>Nombre del local (ej. Colonia)</label><input id="sLocal" placeholder="Colonia">
+      <label>Cajeras (separadas por coma)</label><input id="sCajeras" placeholder="Ana Pérez, Laura Gómez">
+      <label>Clave de OpenRouter (para leer las fotos)</label><input id="sKey" placeholder="sk-or-v1-…" autocomplete="off">
+      <div class="mu">Se crea en openrouter.ai → Keys. Queda guardada solo en este celular.</div>
+    </div>
+    <div class="card">
+      <div class="ct">2 · Planilla de Google</div>
+      <p class="mu">Conectate con la cuenta de Google del local. La app crea una planilla nueva en esa cuenta, o podés pegar el link de una que ya exista.</p>
+      <label>Link de una planilla existente (opcional)</label><input id="sSheet" placeholder="https://docs.google.com/spreadsheets/d/…">
+      <button class="bp" id="sGo" style="margin-top:12px">Conectar con Google y empezar</button>
+      <div id="sMsg"></div>
+    </div>
+  </section>
+
+  <!-- CIERRE -->
+  <section id="vCierre" class="hide">
+    <div id="ultimo"></div>
+    <div class="card">
+      <div class="ct">Nuevo cierre</div>
+      <div class="g2">
+        <div><label>Fecha</label><input type="date" id="fecha"></div>
+        <div><label>Cajera</label><select id="cajero"></select></div>
+      </div>
+      <label style="margin-top:12px">Foto del cierre (Y de caja, Z de caja y desglose del ERP; pueden ir juntos en una sola foto)</label>
+      <div class="row">
+        <button class="bs" id="bCam">📷 Sacar foto</button>
+        <button class="bs" id="bGal">🖼️ Elegir de la galería</button>
+      </div>
+      <input type="file" id="fCam" accept="image/*" capture="environment" class="hide">
+      <input type="file" id="fGal" accept="image/*" multiple class="hide">
+      <div class="fotos" id="fotos"></div>
+      <button class="bp" id="bLeer" style="margin-top:12px">🔎 Leer la foto</button>
+      <div id="leyendo"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Números del cierre</div>
+      <div class="mu">Revisá lo que leyó. Los campos en amarillo hacen que algún control no cierre.</div>
+      <div class="g2" id="campos"></div>
+      <div class="g2">
+        <div><label>Ventas a crédito</label><input inputmode="decimal" id="credito"></div>
+        <div><label>Ventas por transferencia</label><input inputmode="decimal" id="transferencia"></div>
+      </div>
+      <div class="mu">El crédito y las transferencias no salen en los papeles de caja: los carga la cajera a mano.</div>
+      <label>Detalle de gastos en efectivo</label><textarea id="gastosDetalle"></textarea>
+      <label>Observación</label><textarea id="obs"></textarea>
+    </div>
+    <div class="card">
+      <div class="ct">Controles</div>
+      <div id="checks" class="mu">Cargá o leé un cierre para ver los controles.</div>
+      <div style="margin-top:10px" class="mu">Total vendido del día</div>
+      <div class="big" id="total">$0</div>
+      <div class="mu" id="totalDet"></div>
+      <button class="bp" id="bGuardar" style="margin-top:12px">💾 Guardar cierre</button>
+    </div>
+    <div class="card">
+      <div class="ct">Últimos cierres</div>
+      <div id="lista" class="mu">Conectate a Google para ver los cierres guardados.</div>
+    </div>
+  </section>
+
+  <!-- VENTAS -->
+  <section id="vVentas" class="hide">
+    <div class="card">
+      <div class="ct" id="vMesT">Este mes</div>
+      <div class="big" id="vMesTot">—</div>
+      <div class="mu" id="vMesDet"></div>
+      <div style="margin-top:10px" class="mu">Proyección del mes</div>
+      <div style="font-size:1.4rem;font-weight:800" id="vProy">—</div>
+      <div class="mu" id="vProyDet"></div>
+      <div id="vComp"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Ventas por día de la semana</div>
+      <div id="vSem" class="mu"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Últimos 31 días</div>
+      <div id="vDias"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Historial mensual</div>
+      <div id="vHist" class="mu"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Cargar meses anteriores</div>
+      <p class="mu">Para comparar con años anteriores, cargá el total de cada mes que tengas (de tu planilla o del sistema). Los meses con cierres en la app se calculan solos.</p>
+      <div class="g2">
+        <div><label>Mes</label><input type="month" id="hMes"></div>
+        <div><label>Total vendido</label><input inputmode="decimal" id="hTot"></div>
+        <div><label>Días trabajados</label><input inputmode="numeric" id="hDias" placeholder="26"></div>
+        <div style="display:flex;align-items:flex-end"><button class="bs" id="hAdd" style="width:100%">Agregar mes</button></div>
+      </div>
+    </div>
+    <button class="bs" id="vVolver" style="width:100%">← Volver al cierre</button>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="vAjustes" class="hide">
+    <div class="card">
+      <div class="ct">Datos del local</div>
+      <label>Nombre del local</label><input id="aLocal">
+      <label>Cajeras (separadas por coma)</label><input id="aCajeras">
+      <label>Clave de OpenRouter</label><input id="aKey" autocomplete="off">
+      <label>Comisión estimada de tarjetas (%)</label><input id="aCom" inputmode="decimal">
+      <button class="bp" id="aGuardar" style="margin-top:12px">Guardar ajustes</button>
+    </div>
+    <div class="card">
+      <div class="ct">Planilla de cierres</div>
+      <div id="aSheetInfo" class="mu"></div>
+      <div class="row" style="margin-top:8px"><button class="bs" id="aAbrir">Abrir planilla</button></div>
+    </div>
+    <div class="card">
+      <div class="ct">Mail de cada cierre</div>
+      <p class="mu">Un programa dentro de la planilla manda un mail por cada cierre (total vendido, depósito que debería hacer el banco y la foto). Se instala una sola vez desde una computadora: ver el manual.</p>
+      <label>Mails que reciben el cierre (separados por coma)</label><input id="aMails" placeholder="dueña@gmail.com, local@prolimpio.com.uy">
+      <button class="bs" id="aScript" style="width:100%;margin-top:8px">📋 Copiar el programa del mail</button>
+    </div>
+    <div class="card">
+      <div class="ct">Celular del local</div>
+      <p class="mu">Abrí este link en el celular del local: queda configurado con la misma planilla, las cajeras y la clave. Mandalo por un canal privado (tiene la clave de OpenRouter).</p>
+      <div class="row"><button class="bs" id="aLink">📋 Copiar link de configuración</button><button class="bs" id="aShare">📤 Compartir</button></div>
+    </div>
+    <div class="card">
+      <div class="ct">PIN de ajustes</div>
+      <p class="mu">Con PIN, en el celular del local las cajeras solo ven el cierre: para entrar a Ajustes hay que poner el PIN.</p>
+      <label>PIN nuevo (4 números)</label><input id="aPin" inputmode="numeric" maxlength="4">
+      <div class="row" style="margin-top:8px"><button class="bs" id="aPinOk">Poner PIN</button><button class="bs" id="aPinNo">Quitar PIN</button></div>
+    </div>
+    <div class="card">
+      <button class="bs" id="aVolver" style="width:100%">← Volver al cierre</button>
+      <details><summary>Borrar la configuración de este celular</summary><button class="bs" id="aReset" style="width:100%;color:#7F1D1D">Borrar configuración</button></details>
+    </div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+// ID de cliente de Google (OAuth). Si el local usa su propio proyecto de Google Cloud, se cambia solo esta línea.
+const CLIENT_ID="590485373332-ft5l9d7md2ggoluku7pa8936cu6qlilg.apps.googleusercontent.com";
+const SCOPES="https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email";
+const HOJA="CierresCaja";
+const PROMPT_CIERRE="Sos un asistente que lee cierres de caja de un local comercial en Uruguay. Las fotos pueden estar giradas o tener varios papeles juntos. Los números usan coma para miles y punto para decimales (ej: 25,438.00 = 25438).\nLas fechas de los tickets vienen como DD/MM/AA (ej: 23/10/26 = 2026-10-23, nunca 2023).\nPapeles posibles:\n1) \"Y de Caja\" (ticket térmico angosto). ventaPos = \"Venta Total\". efectivoPos = Efectivo de la sección \"Forma Pago-\" (es lo VENDIDO en efectivo) y tarjetasPos = Tarjetas de esa misma sección \"Forma Pago-\"; comprobá que efectivoPos + tarjetasPos = ventaPos. aperturaPos = \"Ingresos-: Apertura De Caja\". salidaPos = \"Egresos-: Salida De Caja\" (en positivo). saldoSistema = Efectivo de \"Saldo Caja--Sis\". efectivoContado = Efectivo de \"Caja Final--Caj\". diferencia = Efectivo de \"Diferencias--Si\" si aparece. cajero sale de \"Cajero: N-Nombre\".\n2) \"Z de Caja\" (ticket térmico): de acá salen visa, mastercard, oca, maestro y otrasTj (líneas VISA, MASTERCARD, OCA, MAESTRO u otras tarjetas). OJO: la línea \"Efectivo\" de la Z NO es la venta en efectivo, es el saldo que quedó en caja: NUNCA la uses para efectivoPos.\n3) \"Desglose de Valores en Caja por Forma de Pago\" (hoja A4 del ERP, a veces girada). Tiene columnas Entrada y Salida y una sección por forma de pago.\nSección \"1-Efectivo $\": aperturaErp = entrada con concepto \"Apertura De Caja\". ventasErp = suma de las entradas que son comprobantes de venta (E-Ticket, E-Factura, \"Edu E-Factura\", \"E-Ticket Contado\", \"E-Factura Contado\"). El ingreso del POS es una entrada de \"Movimiento De Caja\" con concepto \"Ingreso De Pos\" o \"Plata Grande\" (es la Salida De Caja del POS): NO es gasto. gastosEf = suma de TODOS los importes de la columna Salida de esta sección (Gasto Contado, Gasto Recibo, Movimiento De Caja de salida como Arreglo, Adelanto, Retiro, Regalo), salvo el depósito al banco (\"Deposito\"), que va en deposito. Un \"Movimiento De Caja\" es gasto solo si su importe está en la columna Salida. saldoErp = el valor de \"Saldo :\" de la sección Efectivo, NO el \"Sub Total\" (que es solo la suma de entradas). Si hay una tabla de billetes con \"Fisico\" y \"Sistema\", el número de \"Sistema\" tiene que ser igual a saldoErp. Leé CADA fila de la sección: ventasErp es la suma de TODAS las filas de venta (suele haber varias, ej. 818 + 3,269 = 4087). Comprobá: aperturaErp + ventasErp + ingreso del POS − gastosEf − deposito = saldoErp; si no da, volvé a leer la apertura y cada venta dígito por dígito (ojo con 6/8, 3/5, 1/7) hasta que dé. Si no hubo depósito, deposito es 0; si no hubo gastos, gastosEf es 0.\ntarjetaErp = suma de los \"Saldo\" de las secciones de tarjeta del ERP: \"21-Pos Alambrico Manual\" (restar devoluciones), \"5-Tarjeta de Debito\", \"Tarjeta de Credito\" o similares. NO cuentes \"Dinero En Ficha\" ni \"Transferencia Bancaria\" (son cobros y transferencias que se cargan a mano). Si no hay ninguna sección de tarjeta, tarjetaErp es 0 (no uses el Saldo de la sección Efectivo ni las tarjetas del POS).\n4) Boleta de depósito del banco (MONTO).\nDevolvé SOLO un JSON entre <json> y </json> con estas claves numéricas (null si no aparece): ventaPos, efectivoPos, tarjetasPos, visa, mastercard, oca, maestro, otrasTj, aperturaPos, salidaPos, saldoSistema, efectivoContado, diferencia, aperturaErp, ventasErp, tarjetaErp, gastosEf, deposito, saldoErp; y además \"fecha\" (AAAA-MM-DD), \"cajero\" (solo el nombre) y \"gastosDetalle\" (UN SOLO TEXTO, no lista: para cada importe de la columna Salida, el nombre o concepto de la columna \"Rubro y Concepto\" sin el número inicial y el monto, separados por punto y coma; ej: \"Pereyra Raul Nelson: 183\"). No copies números que no estén en el papel. No agregues explicaciones.";
+const SCRIPT_MAIL="/**\n * PROlimpio – Aviso por mail de cada cierre de caja (versión para otros locales, 27/10/2026).\n * ANTES DE GUARDAR: cambiá LOCAL y DESTINOS acá abajo.\n * Va pegado en: planilla de cierres → Extensiones → Apps Script.\n * Para actualizar: borrar todo, pegar este archivo y tocar Guardar. No hace falta volver a ejecutar \"instalar\".\n * Novedades: total vendido del día, lo que deposita el banco por tarjetas y la foto del cierre (liviana) dentro del mail.\n */\n\nconst LOCAL = \"Colonia\";                                   // nombre del local\nconst DESTINOS = \"dueña@gmail.com,local@prolimpio.com.uy\";  // mails que reciben el cierre, separados por coma\nconst HOJA = \"CierresCaja\";\nconst LINK_APP = \"https://emarosteguy-oss.github.io/prolimpio2026/cierres/\";\n// Comisión estimada de tarjetas (promedio débito + crédito, con IVA). Ajustar cuando se firme el contrato nuevo con GetNet.\nconst COMISION_TARJETAS = 0.03;\n// Días sin actividad bancaria (además de sábados y domingos)\nconst FERIADOS_BANCO = [\n  \"2026-10-12\",\"2026-11-02\",\"2026-12-25\",\n  \"2027-01-01\",\"2027-01-06\",\"2027-02-08\",\"2027-02-09\",\"2027-03-25\",\"2027-03-26\",\"2027-05-01\",\"2027-06-19\",\"2027-07-18\",\"2027-08-25\",\"2027-10-12\",\"2027-11-02\",\"2027-12-25\"\n];\n\n// Columnas de la hoja CierresCaja (las escribe la app)\nconst COL = {\n  fecha: 0, cajero: 1, ventaPos: 2, efectivoPos: 3, tarjetasPos: 4,\n  visa: 5, mastercard: 6, oca: 7, maestro: 8, otrasTj: 9,\n  aperturaPos: 10, salidaPos: 11, saldoSistema: 12, efectivoContado: 13, diferencia: 14,\n  aperturaErp: 15, ventasErp: 16, tarjetaErp: 17, gastosEf: 18, deposito: 19, saldoErp: 20,\n  credito: 21, transferencia: 22, gastosDetalle: 23, obs: 24\n};\n\n/** Ejecutar UNA vez: crea el revisor automático cada 5 minutos. */\nfunction instalar() {\n  ScriptApp.getProjectTriggers().forEach(t => {\n    if (t.getHandlerFunction() === \"revisarCierres\") ScriptApp.deleteTrigger(t);\n  });\n  ScriptApp.newTrigger(\"revisarCierres\").timeBased().everyMinutes(5).create();\n  const sh = SpreadsheetApp.getActive().getSheetByName(HOJA);\n  // Arranca desde la última fila actual: no manda mails de cierres viejos.\n  PropertiesService.getScriptProperties().setProperty(\"ultimaFila\", String(sh ? sh.getLastRow() : 1));\n  MailApp.sendEmail(DESTINOS, \"✅ Avisos de cierres de caja activados\",\n    \"Desde ahora vas a recibir un mail por cada cierre de caja que se guarde en la app de PROlimpio \" + LOCAL + \".\");\n}\n\n/** Para probar el formato: manda de nuevo el mail del último cierre (no cambia nada más). */\nfunction probarUltimo() {\n  const sh = SpreadsheetApp.getActive().getSheetByName(HOJA);\n  if (!sh || sh.getLastRow() < 2) return;\n  enviar(sh.getRange(sh.getLastRow(), 1, 1, sh.getLastColumn()).getValues()[0]);\n}\n\n/** Revisa si hay cierres nuevos y manda un mail por cada uno. */\nfunction revisarCierres() {\n  const sh = SpreadsheetApp.getActive().getSheetByName(HOJA);\n  if (!sh) return;\n  const props = PropertiesService.getScriptProperties();\n  const ultima = Number(props.getProperty(\"ultimaFila\") || 1);\n  const n = sh.getLastRow();\n  if (n <= ultima) { if (n < ultima) props.setProperty(\"ultimaFila\", String(n)); return; }\n  const filas = sh.getRange(ultima + 1, 1, n - ultima, sh.getLastColumn()).getValues();\n  filas.forEach(f => { if (f[COL.fecha]) enviar(f); });\n  props.setProperty(\"ultimaFila\", String(n));\n}\n\nfunction num(v) { return (v === \"\" || v === null || isNaN(Number(v))) ? null : Number(v); }\nfunction n0(v) { return num(v) || 0; }\nfunction pesos(v) { return v === null ? \"—\" : \"$\" + Math.round(v).toLocaleString(\"es-UY\"); }\nfunction isoDe(d) { return Utilities.formatDate(d, \"America/Montevideo\", \"yyyy-MM-dd\"); }\nfunction aFecha(v) {\n  if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate(), 12);\n  const p = String(v).split(\"-\"); return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12);\n}\nfunction fecha(v) { return Utilities.formatDate(aFecha(v), \"America/Montevideo\", \"dd/MM/yyyy\"); }\nconst DIAS = [\"domingo\", \"lunes\", \"martes\", \"miércoles\", \"jueves\", \"viernes\", \"sábado\"];\n/** Próximo día hábil bancario (las tarjetas de viernes y sábado se acreditan el lunes). */\nfunction diaHabilSig(v) {\n  const d = aFecha(v);\n  do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6 || FERIADOS_BANCO.indexOf(isoDe(d)) >= 0);\n  return d;\n}\n\nfunction enviar(f) {\n  let dif = num(f[COL.diferencia]);\n  if (dif === null && num(f[COL.efectivoContado]) !== null && num(f[COL.saldoSistema]) !== null)\n    dif = num(f[COL.efectivoContado]) - num(f[COL.saldoSistema]);\n  const abs = dif === null ? null : Math.abs(dif);\n  const est = abs === null ? { ic: \"⚪\", t: \"sin diferencia informada\", c: \"#7A2E0A\", bg: \"#FFF3E6\" }\n    : abs <= 50 ? { ic: \"🟢\", t: \"caja impecable\", c: \"#14532D\", bg: \"#DCFCE7\" }\n    : abs <= 300 ? { ic: \"🟡\", t: \"revisar\", c: \"#92400E\", bg: \"#FEF3C7\" }\n    : { ic: \"🔴\", t: \"diferencia grande\", c: \"#7F1D1D\", bg: \"#FDE4E1\" };\n  const cajero = f[COL.cajero] || \"sin nombre\";\n\n  // Total vendido del día: POS + ventas del ERP (contado y tarjeta) + crédito + transferencias\n  const pos = n0(f[COL.ventaPos]), erpEf = n0(f[COL.ventasErp]);\n  // \"ventas con tarjeta en ERP\" solo existe si el desglose tiene la sección Pos Alambrico; si coincide con el saldo de caja ERP o con las tarjetas del POS es un error de lectura\n  let erpTj = n0(f[COL.tarjetaErp]);\n  if (erpTj && (erpTj === n0(f[COL.saldoErp]) || erpTj === n0(f[COL.tarjetasPos]))) erpTj = 0;\n  const cred = n0(f[COL.credito]), transf = n0(f[COL.transferencia]);\n  const total = pos + erpEf + erpTj + cred + transf;\n  // Lo que se espera que deposite el banco: tarjetas del día menos la comisión\n  const tarjetas = n0(f[COL.tarjetasPos]) + erpTj;\n  const acred = Math.round(tarjetas * (1 - COMISION_TARJETAS));\n  const dAcred = diaHabilSig(f[COL.fecha]);\n  const cuando = DIAS[dAcred.getDay()] + \" \" + Utilities.formatDate(dAcred, \"America/Montevideo\", \"dd/MM\");\n\n  const asunto = `${est.ic} Cierre ${fecha(f[COL.fecha])} · ${cajero} · vendió ${pesos(total)} · ${est.t}` +\n    (dif !== null && abs > 0 ? ` (${dif > 0 ? \"+\" : \"\"}${dif})` : \"\");\n\n  const fila = (k, v) => `<tr><td style=\"padding:6px 10px;color:#7A2E0A\">${k}<\/td><td style=\"padding:6px 10px;text-align:right;font-weight:600\">${v}<\/td><\/tr>`;\n  const partes = [[\"POS\", pos], [\"ERP contado\", erpEf], [\"ERP tarjeta\", erpTj], [\"crédito\", cred], [\"transferencia\", transf]]\n    .filter(x => x[1]).map(x => `${x[0]} ${pesos(x[1])}`).join(\" + \");\n  const html =\n    `<div style=\"font-family:Arial,sans-serif;max-width:520px;color:#1F0D05\">\n      <div style=\"background:#E84400;color:#fff;padding:14px 16px;border-radius:10px 10px 0 0;font-size:18px;font-weight:bold\">PROlimpio ${LOCAL} · Cierre de caja<\/div>\n      <div style=\"background:#FFF3E6;padding:14px 16px;border-left:1px solid #F2C9A0;border-right:1px solid #F2C9A0\">\n        <div style=\"font-size:13px;color:#7A2E0A;text-transform:uppercase;letter-spacing:.5px\">Total vendido el ${DIAS[aFecha(f[COL.fecha]).getDay()]} ${fecha(f[COL.fecha])}<\/div>\n        <div style=\"font-size:30px;font-weight:bold;color:#C2410C;margin-top:2px\">${pesos(total)}<\/div>\n        <div style=\"font-size:12px;color:#7A2E0A;margin-top:2px\">${partes}<\/div>\n        <div style=\"font-size:15px;margin-top:10px\">🏦 El banco debería depositar <b>≈ ${pesos(acred)}<\/b> el <b>${cuando}<\/b><\/div>\n        <div style=\"font-size:12px;color:#7A2E0A\">Tarjetas ${pesos(tarjetas)} menos ~${Math.round(COMISION_TARJETAS * 1000) / 10}% de comisión.${n0(f[COL.deposito]) ? ` Además, el efectivo depositado hoy: ${pesos(n0(f[COL.deposito]))}.` : \"\"}${transf ? ` Las transferencias (${pesos(transf)}) ya entran a la cuenta.` : \"\"}<\/div>\n      <\/div>\n      <div style=\"background:${est.bg};color:${est.c};padding:12px 16px;font-size:16px;font-weight:bold\">${est.ic} ${fecha(f[COL.fecha])} · ${cajero} · Diferencia ${dif === null ? \"—\" : (dif > 0 ? \"+\" : \"\") + dif}<\/div>\n      <table style=\"width:100%;border-collapse:collapse;border:1px solid #F2C9A0\">\n        ${fila(\"Venta total POS\", pesos(num(f[COL.ventaPos])))}\n        ${fila(\"Efectivo / Tarjetas\", pesos(num(f[COL.efectivoPos])) + \" / \" + pesos(num(f[COL.tarjetasPos])))}\n        ${fila(\"Ventas a crédito\", pesos(num(f[COL.credito])))}\n        ${fila(\"Ventas por transferencia\", pesos(num(f[COL.transferencia])))}\n        ${fila(\"Ventas contado ERP\", pesos(num(f[COL.ventasErp])))}\n        ${erpTj ? fila(\"Ventas con tarjeta ERP\", pesos(erpTj)) : \"\"}\n        ${fila(\"Gastos en efectivo\", pesos(num(f[COL.gastosEf])) + (f[COL.gastosDetalle] && String(f[COL.gastosDetalle]).indexOf(\"[object\") < 0 ? \" (\" + f[COL.gastosDetalle] + \")\" : \"\"))}\n        ${fila(\"Depósito al banco\", pesos(num(f[COL.deposito])))}\n        ${fila(\"Saldo final caja ERP\", pesos(num(f[COL.saldoErp])))}\n      <\/table>\n      ${f[COL.obs] ? `<p style=\"padding:0 4px\">Observación: ${f[COL.obs]}<\/p>` : \"\"}\n      <p style=\"padding:0 4px\"><a href=\"${LINK_APP}\" style=\"color:#C2410C\">Abrir la app<\/a><\/p>\n    <\/div>`;\n  // foto del cierre: la app la guarda en pedazos \"img:...\" a partir de la columna AA\n  let foto = null;\n  try {\n    const b64 = f.slice(26).map(String).filter(x => x.indexOf(\"img:\") === 0).map(x => x.slice(4)).join(\"\");\n    if (b64) foto = Utilities.newBlob(Utilities.base64Decode(b64), \"image/jpeg\", \"cierre_\" + fecha(f[COL.fecha]).replace(/\\//g, \"-\") + \".jpg\");\n  } catch (e) { foto = null; }\n  const conFoto = foto ? html.replace(/<\\/div>\\s*$/, `<p style=\"padding:0 4px;color:#7A2E0A;font-size:13px\">Foto del cierre:<\/p><img src=\"cid:foto\" style=\"width:100%;max-width:520px;border:1px solid #F2C9A0;border-radius:8px\"><\/div>`) : html;\n  MailApp.sendEmail(foto ? { to: DESTINOS, subject: asunto, htmlBody: conFoto, inlineImages: { foto } } : { to: DESTINOS, subject: asunto, htmlBody: html });\n}\n";
+const CAMPOS=[["ventaPos","Venta total POS"],["efectivoPos","Efectivo POS"],["tarjetasPos","Tarjetas POS"],["visa","Visa"],["mastercard","Mastercard"],["oca","OCA"],["maestro","Maestro"],["otrasTj","Otras tarjetas"],["aperturaPos","Apertura caja POS"],["salidaPos","Salida de caja POS (pasa al ERP)"],["saldoSistema","Saldo efectivo según sistema"],["efectivoContado","Efectivo contado (caja final)"],["diferencia","Diferencia de caja"],["aperturaErp","Apertura caja ERP"],["ventasErp","Ventas contado en ERP (efectivo)"],["tarjetaErp","Ventas con tarjeta en ERP (POS manual)"],["gastosEf","Gastos pagados en efectivo (ERP)"],["deposito","Depósito al banco"],["saldoErp","Saldo final caja ERP"]];
+const HEAD=["Fecha","Cajero",...CAMPOS.map(c=>c[1]),"Ventas credito","Ventas transferencia","Detalle gastos","Observacion","Timestamp"];
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
+let cfg=LS.get("cierres_cfg",null), token=null, fotos=[], cierres=[], todos=[], historico=[], desbloqueado=false;
+const normF=v=>{ v=String(v||""); const m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:v.slice(0,10); };
+const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Setiembre","Octubre","Noviembre","Diciembre"];
+const DSEM=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const fmt=n=>n==null||isNaN(n)?"—":"$"+Math.round(n).toLocaleString("es-UY");
+const nC=v=>(v===""||v==null||isNaN(Number(v)))?null:Number(v);
+const isoDe=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const hoyISO=()=>isoDe(new Date());
+const toast=(t,ms=3500)=>{const e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",ms);};
+const sha=async s=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))).map(x=>x.toString(16).padStart(2,"0")).join("");
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64d=s=>{s=s.replace(/-/g,"+").replace(/_/g,"/");return JSON.parse(decodeURIComponent(escape(atob(s+"===".slice((s.length+3)%4)))));};
+
+// ── configuración por link (#config=...) ──
+if(location.hash.startsWith("#config=")){ try{ const c=b64d(location.hash.slice(8)); if(c&&c.sheetId&&c.local){ cfg={...c}; LS.set("cierres_cfg",cfg); toast("✓ Celular configurado para PROlimpio "+cfg.local); } }catch(e){ toast("El link de configuración no es válido"); } try{history.replaceState(null,"",location.pathname);}catch(e){} }
+
+// ── Google ──
+const tokGuardado=()=>{const o=LS.get("cierres_tok",null);return o&&o.exp>Date.now()+60000?o.t:null;};
+let gisListo=false;
+function cargarGIS(){const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.async=true;s.onload=()=>{gisListo=true;if(!token&&cfg&&cfg.sheetId&&LS.get("cierres_mail",""))conectar(true);};document.head.appendChild(s);}
+function conectar(auto,despues){
+  if(!window.google?.accounts?.oauth2){ if(!auto) toast("Google está cargando, probá en un segundo"); return; }
+  const hint=LS.get("cierres_mail","");
+  const cl=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,...(hint?{hint}:{}),
+    callback:async r=>{ if(!r.access_token){ pintarG(); return; } token=r.access_token; LS.set("cierres_tok",{t:token,exp:Date.now()+(r.expires_in||3600)*1000});
+      try{const j=await fetch("https://oauth2.googleapis.com/tokeninfo?access_token="+token).then(x=>x.json()); if(j.email) LS.set("cierres_mail",j.email);}catch(e){}
+      pintarG(); if(despues) await despues(); else await cargarCierres(); },
+    error_callback:()=>pintarG()});
+  cl.requestAccessToken(hint?{prompt:""}:{});
+}
+function pintarG(){ $("gbtn").textContent=token?"🟢 Google conectado":"🔄 Conectar Google"; }
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&token&&!tokGuardado()){ token=null; pintarG(); if(gisListo) conectar(true); } });
+async function api(url,opt={}){ const r=await fetch(url,{...opt,headers:{Authorization:"Bearer "+token,"Content-Type":"application/json",...(opt.headers||{})}}); if(r.status===401){ LS.del("cierres_tok"); token=null; pintarG(); throw new Error("Se venció la conexión con Google: tocá Conectar Google"); } return r; }
+const SH="https://sheets.googleapis.com/v4/spreadsheets/";
+async function asegurarHoja(){
+  const m=await api(SH+cfg.sheetId+"?fields=sheets.properties"); if(!m.ok) throw new Error(m.status===403||m.status===404?"Esta cuenta de Google no tiene acceso a la planilla del local. Compartila con esta cuenta o entrá con la cuenta del local.":"No pude abrir la planilla");
+  const j=await m.json(); if((j.sheets||[]).some(s=>s.properties.title===HOJA)) return j;
+  await api(SH+cfg.sheetId+":batchUpdate",{method:"POST",body:JSON.stringify({requests:[{addSheet:{properties:{title:HOJA}}}]})});
+  await api(SH+cfg.sheetId+"/values/"+HOJA+"!A1:append?valueInputOption=USER_ENTERED",{method:"POST",body:JSON.stringify({values:[HEAD]})});
+  return (await api(SH+cfg.sheetId+"?fields=sheets.properties")).json();
+}
+async function crearPlanilla(nombre){
+  const r=await api(SH.slice(0,-1),{method:"POST",body:JSON.stringify({properties:{title:"PROlimpio "+nombre+" – Cierres de caja",locale:"es_UY",timeZone:"America/Montevideo"},sheets:[{properties:{title:HOJA}}]})});
+  if(!r.ok) throw new Error("No pude crear la planilla en Google");
+  const j=await r.json();
+  await api(SH+j.spreadsheetId+"/values/"+HOJA+"!A1:append?valueInputOption=USER_ENTERED",{method:"POST",body:JSON.stringify({values:[HEAD]})});
+  return j.spreadsheetId;
+}
+
+// ── vistas ──
+function vista(v){ ["vSetup","vCierre","vAjustes","vVentas"].forEach(x=>$(x).classList.toggle("hide",x!==v)); window.scrollTo(0,0); }
+function pintarCabecera(){ ["vtbtn","ajbtn"].forEach(x=>$(x).classList.toggle("hide",!cfg||!cfg.sheetId)); $("titulo").textContent="PROlimpio "+(cfg?.local||"")+" · Cierres de caja"; $("subt").textContent=cfg?(LS.get("cierres_mail","")||"Sin conectar a Google"):"Configuración inicial"; document.title="Cierres "+(cfg?.local||""); }
+function iniciar(){
+  pintarCabecera(); pintarG();
+  if(!cfg||!cfg.sheetId){ vista("vSetup"); return; }
+  armarForm(); vista("vCierre");
+  const t=tokGuardado(); if(t){ token=t; pintarG(); cargarCierres(); }
+}
+
+// ── setup ──
+$("sGo").onclick=()=>{
+  const local=$("sLocal").value.trim(), key=$("sKey").value.trim();
+  if(!local){ $("sMsg").innerHTML='<div class="msg er">Falta el nombre del local</div>'; return; }
+  const m=$("sSheet").value.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  conectar(false, async()=>{
+    try{ $("sMsg").innerHTML='<div class="msg wr">Preparando la planilla…</div>';
+      const sheetId=m?m[1]:await crearPlanilla(local);
+      cfg={local,key,sheetId,cajeras:$("sCajeras").value.split(",").map(x=>x.trim()).filter(Boolean),comision:3,pin:""};
+      await asegurarHoja(); LS.set("cierres_cfg",cfg); toast("✓ Listo: la planilla quedó en tu Google Drive"); iniciar();
+    }catch(e){ $("sMsg").innerHTML='<div class="msg er">'+e.message+'</div>'; }
+  });
+};
+
+// ── formulario ──
+function armarForm(){
+  $("campos").innerHTML=CAMPOS.map(([k,l])=>`<div><label>${l}</label><input inputmode="decimal" id="c_${k}"></div>`).join("");
+  $("cajero").innerHTML='<option value="">— elegí —</option>'+(cfg.cajeras||[]).map(c=>`<option>${c}</option>`).join("");
+  $("fecha").value=hoyISO();
+  document.querySelectorAll("#vCierre input,#vCierre textarea,#vCierre select").forEach(e=>e.oninput=controles);
+  controles();
+}
+const leerForm=()=>{ const o={fecha:$("fecha").value,cajero:$("cajero").value,credito:$("credito").value,transferencia:$("transferencia").value,gastosDetalle:$("gastosDetalle").value,obs:$("obs").value}; CAMPOS.forEach(([k])=>o[k]=$("c_"+k).value.replace(/\./g,"").replace(",",".").trim()); return o; };
+function totalDe(c){ const n=k=>nC(c[k])||0; let erpTj=n("tarjetaErp"); if(erpTj&&(erpTj===n("saldoErp")||erpTj===n("tarjetasPos"))) erpTj=0;
+  return {total:n("ventaPos")+n("ventasErp")+erpTj+n("credito")+n("transferencia"),pos:n("ventaPos"),erp:n("ventasErp"),erpTj,cred:n("credito"),transf:n("transferencia"),tarjetas:n("tarjetasPos")+erpTj}; }
+function chequear(c){
+  const v=k=>nC(c[k]); const ok=(a,b)=>Math.abs(a-b)<=1; const R=[];
+  const hace7=isoDe(new Date(Date.now()-7*864e5));
+  if(c.fecha&&(c.fecha>hoyISO()||c.fecha<hace7)) R.push({ok:false,txt:"Revisá la fecha del cierre",campos:["fecha"]});
+  if(!c.cajero) R.push({ok:false,txt:"Elegí la cajera",campos:["cajero"]});
+  if(v("ventaPos")!=null&&v("efectivoPos")!=null&&v("tarjetasPos")!=null) R.push({ok:ok(v("efectivoPos")+v("tarjetasPos"),v("ventaPos")),txt:"Efectivo + tarjetas = venta total POS",campos:["ventaPos","efectivoPos","tarjetasPos"]});
+  const marcas=["visa","mastercard","oca","maestro","otrasTj"].map(v).filter(x=>x!=null);
+  if(marcas.length&&v("tarjetasPos")!=null) R.push({ok:ok(marcas.reduce((s,x)=>s+x,0),v("tarjetasPos")),txt:"Suma de tarjetas por marca = tarjetas POS",campos:["visa","mastercard","oca","maestro","otrasTj","tarjetasPos"]});
+  if(v("aperturaPos")!=null&&v("efectivoPos")!=null&&v("salidaPos")!=null&&v("saldoSistema")!=null) R.push({ok:ok(v("aperturaPos")+v("efectivoPos")-v("salidaPos"),v("saldoSistema")),txt:"Apertura + efectivo − salida = saldo del sistema",campos:["aperturaPos","efectivoPos","salidaPos","saldoSistema"]});
+  if(v("efectivoContado")!=null&&v("saldoSistema")!=null) R.push({ok:ok(v("efectivoContado")-v("saldoSistema"),v("diferencia")||0),txt:"Efectivo contado − saldo del sistema = diferencia",campos:["efectivoContado","saldoSistema","diferencia"]});
+  if(["aperturaErp","ventasErp","salidaPos","saldoErp"].every(k=>v(k)!=null)){
+    if(v("tarjetaErp")) R.push({ok:!(v("tarjetaErp")===v("saldoErp")||v("tarjetaErp")===v("tarjetasPos")),txt:"Ventas con tarjeta en ERP: solo si el desglose tiene la sección \"Pos Alambrico Manual\" (si no, va 0)",campos:["tarjetaErp"]});
+    R.push({ok:ok(v("aperturaErp")+v("ventasErp")+v("salidaPos")-(v("gastosEf")||0)-(v("deposito")||0),v("saldoErp")),txt:"Caja ERP: apertura + ventas + ingreso del POS − gastos − depósito = saldo",campos:["aperturaErp","ventasErp","salidaPos","gastosEf","deposito","saldoErp"]}); }
+  return R;
+}
+function controles(){
+  const c=leerForm(), R=chequear(c), malos=new Set(R.filter(x=>!x.ok).flatMap(x=>x.campos));
+  CAMPOS.forEach(([k])=>$("c_"+k).classList.toggle("warn",malos.has(k))); $("fecha").classList.toggle("warn",malos.has("fecha"));
+  $("checks").innerHTML=R.length?R.map(x=>`<div class="chk ${x.ok?"ok":"no"}">${x.ok?"✓":"✗"} ${x.txt}</div>`).join(""):"Cargá o leé un cierre para ver los controles.";
+  const T=totalDe(c); $("total").textContent=fmt(T.total);
+  $("totalDet").textContent=[["POS",T.pos],["ERP contado",T.erp],["ERP tarjeta",T.erpTj],["crédito",T.cred],["transferencia",T.transf]].filter(x=>x[1]).map(x=>x[0]+" "+fmt(x[1])).join(" + ")+(T.tarjetas?` · el banco debería depositar ≈ ${fmt(T.tarjetas*(1-(Number(cfg.comision)||3)/100))} por tarjetas`:"");
+}
+
+// ── fotos ──
+const reducir=(file,M=1700,q=.85)=>new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{let w=im.width,h=im.height;const k=Math.min(1,M/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);res(cv.toDataURL("image/jpeg",q));};im.src=fr.result;};fr.readAsDataURL(file);});
+const achicar=(url,M)=>new Promise(res=>{const im=new Image();im.onload=()=>{const k=Math.min(1,M/Math.max(im.width,im.height));const cv=document.createElement("canvas");cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL("image/jpeg",.8));};im.onerror=()=>res(url);im.src=url;});
+function pintarFotos(){ $("fotos").innerHTML=fotos.map((u,i)=>`<div><img src="${u}"><span data-i="${i}">×</span></div>`).join(""); $("fotos").querySelectorAll("span").forEach(s=>s.onclick=()=>{fotos.splice(+s.dataset.i,1);pintarFotos();}); }
+async function agregar(files){ for(const f of files){ try{ fotos.push(await reducir(f)); }catch(e){} } pintarFotos(); }
+$("bCam").onclick=()=>$("fCam").click(); $("bGal").onclick=()=>$("fGal").click();
+$("fCam").onchange=e=>{agregar(e.target.files);e.target.value="";}; $("fGal").onchange=e=>{agregar(e.target.files);e.target.value="";};
+async function fotoMail(){
+  if(!fotos.length) return null;
+  const ims=await Promise.all(fotos.map(u=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=u;}))).then(a=>a.filter(Boolean));
+  for(const [H,q] of [[1100,.6],[950,.5],[800,.45],[650,.4],[520,.35]]){
+    const ws=ims.map(i=>Math.round(i.width*H/i.height)); let W=ws.reduce((a,b)=>a+b,0),h=H; const k=Math.min(1,1700/W); W=Math.round(W*k); h=Math.round(H*k);
+    const cv=document.createElement("canvas"); cv.width=W; cv.height=h; const g=cv.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,W,h);
+    let x=0; ims.forEach((im,j)=>{const w=Math.round(ws[j]*k); g.drawImage(im,x,0,w,h); x+=w;});
+    const b=cv.toDataURL("image/jpeg",q).split(",")[1]; if(b.length<=135000) return b; }
+  return null;
+}
+
+// ── lectura con IA (OpenRouter) ──
+async function leerIA(onEstado){
+  const key=cfg.key; if(!key) throw new Error("Falta la clave de OpenRouter (Ajustes)");
+  const PAGO=["google/gemini-2.5-flash","google/gemini-2.5-flash-lite","openai/gpt-4.1-mini","openai/gpt-4o-mini"];
+  // sin saldo en OpenRouter se usan solo los modelos gratuitos (se recuerda una semana para no perder tiempo)
+  const sinSaldoAntes=(LS.get("cierres_sinsaldo",0)||0)>Date.now()-7*864e5;
+  let modelos=sinSaldoAntes?[]:[...PAGO.slice(0,2)];
+  try{ const j=await fetch("https://openrouter.ai/api/v1/models").then(r=>r.json()); const gratis=(j.data||[]).filter(m=>m.id.endsWith(":free")&&(m.architecture?.input_modalities||[]).includes("image")&&!/safety|guard|embed|moderat|reason|think/i.test(m.id)).map(m=>m.id).slice(0,5); modelos=[...modelos,...gratis]; }catch(e){ modelos.push("qwen/qwen2.5-vl-72b-instruct:free","google/gemma-3-27b-it:free"); }
+  const errores=[]; let sinSaldo=false, chicas=null;
+  const pedir=async(model,imgs)=>{ const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),45000);
+    let r; try{ r=await fetch("https://openrouter.ai/api/v1/chat/completions",{signal:ctrl.signal,method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+key,"HTTP-Referer":location.origin+location.pathname,"X-Title":"PROlimpio "+cfg.local},body:JSON.stringify({model,temperature:0,max_tokens:1500,messages:[{role:"user",content:[{type:"text",text:PROMPT_CIERRE},...imgs.map(u=>({type:"image_url",image_url:{url:u}}))]}]})}); }
+    catch(e){ clearTimeout(to); throw new Error("no respondió en 45 segundos"); } clearTimeout(to);
+    let d={}; try{d=await r.json();}catch(e){} if(!r.ok||d.error) throw new Error(d?.error?.message||("HTTP "+r.status));
+    const t=d?.choices?.[0]?.message?.content||""; const m=t.match(/<json>([\s\S]*?)<\/json>/i)||t.match(/\{[\s\S]*\}/); if(!m) throw new Error("respondió sin datos");
+    return JSON.parse((m[1]||m[0]).replace(/```json|```/g,"").trim()); };
+  for(const model of modelos){ const pago=!model.endsWith(":free"); if(pago&&sinSaldo) continue;
+    try{ onEstado("Leyendo con "+model.replace(":free","")+"…"); return {datos:await pedir(model,fotos),model}; }
+    catch(e){ const m=String(e.message||e); if(pago&&/credit|insufficient|402|balance|payment/i.test(m)){ sinSaldo=true; LS.set("cierres_sinsaldo",Date.now()); errores.push("La cuenta de OpenRouter no tiene saldo"); continue; }
+      if(/45 segundos|rate|429|No endpoints|not a valid/i.test(m)){ errores.push(model+": "+m); continue; }
+      try{ if(!chicas) chicas=await Promise.all(fotos.map(u=>achicar(u,1100))); return {datos:await pedir(model,chicas),model}; }catch(e2){ errores.push(model+": "+(e2.message||e2)); } } }
+  throw new Error(errores.slice(-2).join(" · ")||"No pude leer la foto");
+}
+$("bLeer").onclick=async()=>{
+  if(!fotos.length){ toast("Sacá o elegí la foto del cierre"); return; }
+  $("bLeer").disabled=true; const est=t=>$("leyendo").innerHTML='<div class="msg wr">'+t+'</div>';
+  try{ const {datos:d}=await leerIA(est);
+    CAMPOS.forEach(([k])=>{ if(d[k]!=null&&!isNaN(Number(d[k]))) $("c_"+k).value=String(Math.abs(Number(d[k]))*(k==="diferencia"&&Number(d[k])<0?-1:1)); });
+    if(d.fecha&&/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)){ const h7=isoDe(new Date(Date.now()-7*864e5)); $("fecha").value=(d.fecha<=hoyISO()&&d.fecha>=h7)?d.fecha:hoyISO(); }
+    if(d.cajero){ const nom=String(d.cajero).replace(/^\d+-/,"").trim().toLowerCase(); const hit=(cfg.cajeras||[]).find(c=>c.toLowerCase().includes(nom.split(" ")[0])||nom.includes(c.toLowerCase().split(" ")[0])); if(hit) $("cajero").value=hit; }
+    if(d.gastosDetalle) $("gastosDetalle").value=Array.isArray(d.gastosDetalle)?d.gastosDetalle.map(x=>typeof x==="object"?Object.values(x).join(" "):x).join("; "):String(d.gastosDetalle);
+    // si la caja del ERP no cierra, las ventas contado del ERP salen de la cuenta
+    const g=k=>nC($("c_"+k).value); if(["aperturaErp","salidaPos","gastosEf","deposito","saldoErp"].every(k=>g(k)!=null)){ const calc=g("saldoErp")-g("aperturaErp")-g("salidaPos")+g("gastosEf")+g("deposito"); if(calc>0&&Math.abs(calc-(g("ventasErp")||0))>1) $("c_ventasErp").value=String(Math.round(calc)); }
+    $("leyendo").innerHTML='<div class="msg ok">✓ Foto leída: revisá los números, cargá crédito y transferencias si hubo, y guardá.</div>'; controles();
+  }catch(e){ $("leyendo").innerHTML='<div class="msg er">No pude leer la foto: '+e.message+'. Podés completar los números a mano.</div>'; }
+  $("bLeer").disabled=false;
+};
+
+// ── guardar ──
+$("bGuardar").onclick=async()=>{
+  if(!token){ conectar(false,()=>$("bGuardar").onclick()); return; }
+  const c=leerForm(); if(!c.fecha||nC(c.ventaPos)==null){ toast("Falta la fecha o la venta total"); return; }
+  const malos=chequear(c).filter(x=>!x.ok); if(malos.length&&!confirm(`Hay ${malos.length} control(es) que no cierran. ¿Guardar igual?`)) return;
+  $("bGuardar").disabled=true; $("bGuardar").textContent="Guardando…";
+  try{ const meta=await asegurarHoja();
+    const fila=[c.fecha,c.cajero||"",...CAMPOS.map(([k])=>nC(c[k])==null?"":String(nC(c[k]))),String(nC(c.credito)||0),String(nC(c.transferencia)||0),c.gastosDetalle||"",c.obs||"",new Date().toISOString()];
+    try{ const b=await fotoMail(); if(b){ const partes=b.match(/.{1,45000}/g)||[]; const hj=(meta.sheets||[]).find(x=>x.properties.title===HOJA);
+      const cols=hj?.properties?.gridProperties?.columnCount; const fal=26+partes.length-(cols||26);
+      if(hj&&fal>0) await api(SH+cfg.sheetId+":batchUpdate",{method:"POST",body:JSON.stringify({requests:[{appendDimension:{sheetId:hj.properties.sheetId,dimension:"COLUMNS",length:fal+2}}]})});
+      fila.push(...partes.map(x=>"img:"+x)); } }catch(e){}
+    const r=await api(SH+cfg.sheetId+"/values/"+HOJA+"!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",{method:"POST",body:JSON.stringify({values:[fila]})});
+    if(!r.ok) throw new Error("Google no aceptó el cierre ("+r.status+")");
+    const T=totalDe(c); $("ultimo").innerHTML=`<div class="msg ok">✓ Cierre del ${c.fecha.split("-").reverse().join("/")} guardado: vendido ${fmt(T.total)}. En unos minutos llega el mail.</div>`;
+    fotos=[]; pintarFotos(); armarForm(); ["credito","transferencia","gastosDetalle","obs"].forEach(k=>$(k).value=""); $("leyendo").innerHTML=""; controles(); await cargarCierres(); window.scrollTo({top:0,behavior:"smooth"});
+  }catch(e){ toast(e.message,6000); }
+  $("bGuardar").disabled=false; $("bGuardar").textContent="💾 Guardar cierre";
+};
+
+// ── últimos cierres ──
+async function cargarCierres(){
+  if(!token||!cfg?.sheetId) return;
+  try{ await asegurarHoja(); const r=await api(SH+cfg.sheetId+"/values/"+HOJA+"!A2:Z3000"); const j=await r.json();
+    todos=(j.values||[]).map(f=>{const o={fecha:normF(f[0]),cajero:f[1],ts:f[25]||""};CAMPOS.forEach(([k],i)=>o[k]=f[2+i]);o.credito=f[21];o.transferencia=f[22];return o;}).filter(o=>/^\d{4}-\d{2}-\d{2}$/.test(o.fecha));
+    cierres=todos.slice().reverse().slice(0,15);
+    $("lista").innerHTML=cierres.length?`<table><tr><th>Fecha</th><th>Cajera</th><th class="r">Vendido</th><th class="r">Dif.</th></tr>${cierres.map(c=>{const d=nC(c.diferencia);return `<tr><td>${String(c.fecha).split("-").reverse().join("/")}</td><td>${c.cajero||""}</td><td class="r">${fmt(totalDe(c).total)}</td><td class="r" style="color:${d==null?"":Math.abs(d)<=50?"#14532D":Math.abs(d)<=300?"#92400E":"#7F1D1D"}">${d==null?"—":(d>0?"+":"")+d}</td></tr>`;}).join("")}</table>`:"Todavía no hay cierres guardados.";
+  }catch(e){ $("lista").innerHTML='<div class="msg er">'+e.message+'</div>'; }
+}
+
+// ── ventas, historial y proyección ──
+const HHIST="Historico";
+async function cargarHistorico(){
+  try{ const m=await (await api(SH+cfg.sheetId+"?fields=sheets.properties")).json();
+    if(!(m.sheets||[]).some(s=>s.properties.title===HHIST)){ await api(SH+cfg.sheetId+":batchUpdate",{method:"POST",body:JSON.stringify({requests:[{addSheet:{properties:{title:HHIST}}}]})}); await api(SH+cfg.sheetId+"/values/"+HHIST+"!A1:append?valueInputOption=RAW",{method:"POST",body:JSON.stringify({values:[["Mes (AAAA-MM)","Total vendido","Dias trabajados","Timestamp"]]})}); }
+    const j=await (await api(SH+cfg.sheetId+"/values/"+HHIST+"!A2:C500")).json();
+    const map={}; (j.values||[]).forEach(f=>{ const mes=String(f[0]||"").slice(0,7); if(/^\d{4}-\d{2}$/.test(mes)) map[mes]={mes,total:nC(f[1])||0,dias:nC(f[2])||null}; }); historico=Object.values(map);
+  }catch(e){ historico=[]; }
+}
+// días hábiles del local: lunes a sábado
+const habiles=(y,m,desde=1,hasta=null)=>{ const nd=new Date(y,m+1,0).getDate(); let n=0; for(let d=desde;d<=(hasta??nd);d++){ if(new Date(y,m,d).getDay()!==0) n++; } return n; };
+function ventasPorDia(){ const map={}; todos.forEach(c=>{ map[c.fecha]=totalDe(c).total; }); return map; } // si hay dos cierres el mismo día queda el último
+function meses(){
+  const vd=ventasPorDia(), M={};
+  Object.entries(vd).forEach(([f,t])=>{ const k=f.slice(0,7); (M[k]=M[k]||{mes:k,total:0,dias:0,app:true}); M[k].total+=t; M[k].dias++; });
+  historico.forEach(h=>{ if(!M[h.mes]) M[h.mes]={...h,app:false}; });
+  return M;
+}
+function pintarVentas(){
+  const vd=ventasPorDia(), M=meses(), hoy=new Date(), y=hoy.getFullYear(), m=hoy.getMonth(), k=`${y}-${String(m+1).padStart(2,"0")}`;
+  const act=M[k]||{total:0,dias:0}; const dh=habiles(y,m);
+  // peso de cada día de la semana según la historia propia (si hay al menos 4 semanas de cierres); si no, todos iguales
+  const porSem=[0,0,0,0,0,0,0], cnt=[0,0,0,0,0,0,0]; Object.entries(vd).forEach(([f,t])=>{ const d=new Date(f+"T12:00:00").getDay(); porSem[d]+=t; cnt[d]++; });
+  const promSem=porSem.map((t,i)=>cnt[i]?t/cnt[i]:null); const conDatos=Object.keys(vd).length>=24;
+  const promGen=act.dias?act.total/act.dias:0;
+  const promDiaSem=promSem.filter(x=>x!=null), mediaSem=promDiaSem.length?promDiaSem.reduce((a,b)=>a+b,0)/promDiaSem.length:0;
+  let falta=0; const nd=new Date(y,m+1,0).getDate();
+  for(let d=1; d<=nd; d++){ const f=`${k}-${String(d).padStart(2,"0")}`; const wd=new Date(y,m,d).getDay(); if(wd===0||vd[f]!=null||f<hoyISO()) continue;
+    falta+= conDatos&&promSem[wd]!=null&&mediaSem? promGen*promSem[wd]/mediaSem : promGen; }
+  const proy=act.total+falta;
+  $("vMesT").textContent=MESES[m]+" "+y;
+  $("vMesTot").textContent=fmt(act.total);
+  $("vMesDet").textContent=`${act.dias} días con cierre de ${dh} hábiles · promedio ${fmt(promGen)} por día`;
+  $("vProy").textContent=act.dias?fmt(proy):"—";
+  $("vProyDet").textContent=act.dias?`${fmt(proy/dh)} por día hábil · ${conDatos?"según el promedio del mes y cómo vende cada día de la semana":"según el promedio del mes (con más cierres, ajusta por día de la semana)"}`:"Todavía no hay cierres este mes";
+  const ant=M[`${y-1}-${String(m+1).padStart(2,"0")}`];
+  if(ant&&ant.total&&act.dias){ const pdAnt=ant.total/(ant.dias||habiles(y-1,m)); const v=(proy/dh/pdAnt-1)*100;
+    $("vComp").innerHTML=`<div class="msg ${v>=0?"ok":"er"}">${v>=0?"▲":"▼"} ${Math.abs(v).toFixed(1).replace(".",",")}% por día vs ${MESES[m].toLowerCase()} ${y-1} (${fmt(ant.total)}, ${fmt(pdAnt)} por día)</div>`; }
+  else $("vComp").innerHTML=`<div class="mu" style="margin-top:8px">Cargá ${MESES[m].toLowerCase()} ${y-1} abajo para comparar con el año pasado.</div>`;
+  $("vSem").innerHTML=promSem.some(x=>x!=null)?`<div style="overflow-x:auto"><table style="font-size:.8rem"><tr>${[1,2,3,4,5,6].map(i=>`<th class="r">${DSEM[i]}</th>`).join("")}</tr><tr>${[1,2,3,4,5,6].map(i=>`<td class="r">${promSem[i]==null?"—":fmt(promSem[i])}</td>`).join("")}</tr></table></div><div class="mu" style="margin-top:4px">Promedio de venta de cada día, con todos los cierres guardados.</div>`:"Sin cierres todavía.";
+  const dias=[]; for(let i=30;i>=0;i--){ const d=new Date(Date.now()-i*864e5); const f=isoDe(d); if(vd[f]!=null) dias.push([f,vd[f]]); }
+  const mx=Math.max(1,...dias.map(x=>x[1]));
+  $("vDias").innerHTML=dias.length?dias.map(([f,t])=>`<div style="display:flex;align-items:center;gap:8px;font-size:.85rem;margin:3px 0"><span style="width:74px;white-space:nowrap;color:var(--mu)">${DSEM[new Date(f+"T12:00:00").getDay()]} ${f.slice(8)}/${f.slice(5,7)}</span><span style="flex:1;background:#FBE3CF;border-radius:4px;height:14px"><span style="display:block;height:14px;border-radius:4px;background:var(--ac);width:${(t/mx*100).toFixed(1)}%"></span></span><span style="width:78px;text-align:right">${fmt(t)}</span></div>`).join(""):'<div class="mu">Sin cierres en los últimos 31 días.</div>';
+  const ks=Object.keys(M).sort().reverse();
+  $("vHist").innerHTML=ks.length?`<table><tr><th>Mes</th><th class="r">Total</th><th class="r">Días</th><th class="r">Prom./día</th><th class="r">vs año ant.</th></tr>${ks.map(kk=>{ const r=M[kk]; const [yy,mm]=kk.split("-").map(Number); const dd=r.dias||habiles(yy,mm-1); const a=M[`${yy-1}-${String(mm).padStart(2,"0")}`]; const pa=a&&a.total?a.total/(a.dias||habiles(yy-1,mm-1)):null; const v=pa?((r.total/dd)/pa-1)*100:null; const enCurso=kk===k;
+    return `<tr><td>${MESES[mm-1].slice(0,3)} ${yy}${r.app?"":" ✎"}${enCurso?" (en curso)":""}</td><td class="r">${fmt(r.total)}</td><td class="r">${r.dias||"—"}</td><td class="r">${fmt(r.total/dd)}</td><td class="r" style="color:${v==null?"":v>=0?"#14532D":"#7F1D1D"}">${v==null?"—":(v>=0?"+":"")+v.toFixed(1).replace(".",",")+"%"}</td></tr>`;}).join("")}</table><div class="mu" style="margin-top:4px">✎ = mes cargado a mano. La comparación es por día trabajado.</div>`:"Sin datos todavía.";
+}
+async function pedirPin(){ if(!cfg?.pin||desbloqueado) return true; const p=prompt("PIN"); if(!p) return false; if(await sha("prolimpio:"+p)!==cfg.pin){ toast("PIN incorrecto"); return false; } desbloqueado=true; return true; }
+$("vtbtn").onclick=async()=>{ if(!cfg?.sheetId||!(await pedirPin())) return; vista("vVentas"); if(!token){ conectar(false,async()=>{ await cargarCierres(); await cargarHistorico(); pintarVentas(); }); return; } $("vHist").textContent="Cargando…"; await cargarCierres(); await cargarHistorico(); pintarVentas(); };
+$("vVolver").onclick=()=>vista("vCierre");
+$("hAdd").onclick=async()=>{ const mes=$("hMes").value, tot=nC($("hTot").value.replace(/\./g,"").replace(",",".")), dias=nC($("hDias").value);
+  if(!/^\d{4}-\d{2}$/.test(mes)||!tot){ toast("Elegí el mes y el total"); return; } if(!token){ toast("Conectate a Google primero"); return; }
+  await api(SH+cfg.sheetId+"/values/"+HHIST+"!A1:append?valueInputOption=RAW",{method:"POST",body:JSON.stringify({values:[[mes,String(tot),dias?String(dias):"",new Date().toISOString()]]})});
+  $("hTot").value=""; $("hDias").value=""; toast("✓ "+MESES[+mes.slice(5)-1]+" "+mes.slice(0,4)+" agregado"); await cargarHistorico(); pintarVentas(); };
+
+// ── ajustes ──
+$("ajbtn").onclick=async()=>{
+  if(!cfg){ return; }
+  if(!(await pedirPin())) return;
+  $("aLocal").value=cfg.local; $("aMails").value=cfg.mails||""; $("aCajeras").value=(cfg.cajeras||[]).join(", "); $("aKey").value=cfg.key||""; $("aCom").value=cfg.comision??3;
+  $("aSheetInfo").innerHTML=`Planilla: <a href="https://docs.google.com/spreadsheets/d/${cfg.sheetId}" target="_blank">abrir en Google Sheets</a><br>Cuenta conectada: ${LS.get("cierres_mail","—")}`;
+  vista("vAjustes");
+};
+$("gbtn").onclick=()=>{ if(cfg&&cfg.sheetId) conectar(false); };
+$("aGuardar").onclick=()=>{ cfg={...cfg,local:$("aLocal").value.trim()||cfg.local,cajeras:$("aCajeras").value.split(",").map(x=>x.trim()).filter(Boolean),key:$("aKey").value.trim(),mails:$("aMails").value.trim(),comision:Number($("aCom").value.replace(",","."))||3}; LS.set("cierres_cfg",cfg); pintarCabecera(); armarForm(); toast("✓ Ajustes guardados"); };
+$("aScript").onclick=async()=>{ const mails=$("aMails").value.split(",").map(x=>x.trim()).filter(Boolean).join(","); if(!mails){ toast("Poné al menos un mail"); return; }
+  cfg.mails=mails; LS.set("cierres_cfg",cfg);
+  const com=Number(cfg.comision)||3; const txt=SCRIPT_MAIL.replace('"Colonia"',JSON.stringify(cfg.local)).replace('"dueña@gmail.com,local@prolimpio.com.uy"',JSON.stringify(mails)).replace("https://emarosteguy-oss.github.io/prolimpio2026/cierres/",location.origin+location.pathname).replace("const COMISION_TARJETAS = 0.03;","const COMISION_TARJETAS = "+(com/100)+";");
+  try{ await navigator.clipboard.writeText(txt); toast("✓ Programa copiado: pegalo en Extensiones → Apps Script de la planilla",5000); }catch(e){ const w=window.open("","_blank"); if(w){ w.document.write("<pre>"+txt.replace(/</g,"&lt;")+"</pre>"); } } };
+$("aAbrir").onclick=()=>window.open("https://docs.google.com/spreadsheets/d/"+cfg.sheetId,"_blank");
+const linkCfg=()=>location.origin+location.pathname+"#config="+b64e(cfg);
+$("aLink").onclick=async()=>{ try{ await navigator.clipboard.writeText(linkCfg()); toast("✓ Link copiado: pegalo en WhatsApp al celular del local"); }catch(e){ prompt("Copiá este link",linkCfg()); } };
+$("aShare").onclick=async()=>{ if(navigator.share){ try{ await navigator.share({title:"Cierres PROlimpio "+cfg.local,text:"Abrí este link en el celular del local para configurar la app de cierres:",url:linkCfg()}); }catch(e){} } else $("aLink").onclick(); };
+$("aPinOk").onclick=async()=>{ const p=$("aPin").value; if(!/^\d{4}$/.test(p)){ toast("El PIN tiene que ser de 4 números"); return; } cfg.pin=await sha("prolimpio:"+p); LS.set("cierres_cfg",cfg); $("aPin").value=""; toast("✓ PIN puesto. Copiá de nuevo el link para el celular del local así también lo tiene."); };
+$("aPinNo").onclick=()=>{ cfg.pin=""; LS.set("cierres_cfg",cfg); toast("PIN quitado"); };
+$("aVolver").onclick=()=>vista("vCierre");
+$("aReset").onclick=()=>{ if(confirm("¿Borrar la configuración de este celular? La planilla y los cierres guardados no se borran.")){ LS.del("cierres_cfg"); LS.del("cierres_tok"); cfg=null; token=null; iniciar(); } };
+
+cargarGIS(); iniciar();
+</script>
+</body>
+</html>
